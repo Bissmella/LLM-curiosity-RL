@@ -20,8 +20,8 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
 ## Setup
 ### Create your conda environment
 
-conda create -n viper python==3.9.0
-conda activate viper
+    conda create -n viper python==3.9.0
+    conda activate viper
 
 ### Install Alfworld
 
@@ -34,13 +34,14 @@ conda activate viper
 
     pip install -e .[full]
 ### Install lamorel
-cd lamorel/lamorel
-pip install -e .
-pip install wandb gym peft bitsandbytes pyvirtualdisplay
+    cd lamorel/lamorel
+    pip install -e .
+    pip install wandb gym peft bitsandbytes pyvirtualdisplay
 
 ### Download Alfworld data lamorel
     export ALFWORLD_DATA=<storage_path>
     alfworld-download
+## RUN PPO Training
 
 ## Demonstration
 
