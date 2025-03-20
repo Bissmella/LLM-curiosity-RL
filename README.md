@@ -38,7 +38,7 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
     pip install -e .
     pip install wandb gym peft bitsandbytes pyvirtualdisplay
 
-### Download Alfworld data lamorel
+### Download Alfworld episodes data
     export ALFWORLD_DATA=<storage_path>
     alfworld-download
 ## RUN PPO Training
@@ -46,19 +46,18 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
             --config-path "./experiment/configs/" 
             --config-name "local_gpu_config"        
             rl_script_args.path="./experiment/Train_PPO.py" 
-            rl_script_args.output_dir=. 
+            rl_script_args.output_dir=.  # weight dir after training 
             lamorel_args.accelerate_args.machine_rank=0 
             lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B" 
             lamorel_args.llm_args.model_type="causal" 
-            rl_script_args.prompt_id=0  
             rl_script_args.seed=3 
             rl_script_args.number_envs=4 
-            rl_script_args.task=[2] 
+            rl_script_args.task=[2] # task-type ids: 1 - Pick & Place, 2 - Examine in Light, 3 - Clean & Place, 4 - Heat & Place, 5 - Cool & Place, 6 - Pick Two & Place
             lamorel_args.config_alfred="./alfworld/configs/base_config.yaml" 
             wandb_args.run=Examine_in_light 
             lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" 
             wandb_args.mode="offline" 
-            lamorel_args.distributed_setup_args.n_llm_processes=4  
+            lamorel_args.distributed_setup_args.n_llm_processes=4  #number of gpu for training
             rl_script_args.transitions_buffer_len=5 
             rl_script_args.epochs=500 
             rl_script_args.gradient_batch_size=2 
