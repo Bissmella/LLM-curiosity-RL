@@ -10,11 +10,38 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
 
 ## To-Do List  
 - [x] Setup the repository  
-- [ ] Code Release  
-- [ ] Docker Release
+- [x] Code Release
 - [ ] Documentation
- 
-  
+- [ ] Docker Release
+- [ ] release BC Dataset
+- [ ] Demonstration
+
+
+## Setup
+### Create your conda environment
+
+conda create -n viper python==3.9.0
+conda activate viper
+
+### Install Alfworld
+
+    cd alfword/TextWorld
+    pip install -e .[full]
+
+    pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu118
+
+    cd ..
+
+    pip install -e .[full]
+### Install lamorel
+cd lamorel/lamorel
+pip install -e .
+pip install wandb gym peft bitsandbytes pyvirtualdisplay
+
+### Download Alfworld data lamorel
+    export ALFWORLD_DATA=<storage_path>
+    alfworld-download
+
 ## Demonstration
 
 
