@@ -227,6 +227,106 @@ class AlfredThorEnv(object):
             goal_condition_success_rate = pcs[0] / float(pcs[1])
             acs = self.controller.get_admissible_commands()
 
+            #*******************
+            event = self.env.last_event
+            
+            # Get current frame information
+            current_frame = event.frame
+            frame_shape = current_frame.shape
+            
+            # Process objects and create 2D bounding boxes
+            objects_with_bbox = []
+            for obj in event.metadata['objects']:
+                # Only process visible objects in the current frame
+                if obj['visible']:
+                    # Get object bounds from metadata
+                    obj_bounds = obj.get('objectBounds', {})
+                    
+                    # Check if obj_bounds is a dictionary and has objectBoundsCorners
+                    if isinstance(obj_bounds, dict) and 'objectBoundsCorners' in obj_bounds:
+                        obj_corners = obj_bounds['objectBoundsCorners']
+                        
+                        # If we have corners, use them directly
+                        if obj_corners:
+                            # Project corners to 2D
+                            corners_2d = [self.env.project_3d_to_2d(corner) for corner in obj_corners]
+                            
+                            # Calculate bounding box
+                            x_coords = [x for x, y in corners_2d]
+                            y_coords = [y for x, y in corners_2d]
+                            bbox = {
+                                'x1': min(x_coords),
+                                'y1': min(y_coords),
+                                'x2': max(x_coords),
+                                'y2': max(y_coords)
+                            }
+                        else:
+                            # Fallback to simplified box if no corners available
+                            obj_width = 0.5
+                            obj_height = 0.5
+                            corners_3d = [
+                                {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
+                                {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
+                                {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']},
+                                {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']}
+                            ]
+                            corners_2d = [self.env.project_3d_to_2d(corner) for corner in corners_3d]
+                            x_coords = [x for x, y in corners_2d]
+                            y_coords = [y for x, y in corners_2d]
+                            bbox = {
+                                'x1': min(x_coords),
+                                'y1': min(y_coords),
+                                'x2': max(x_coords),
+                                'y2': max(y_coords)
+                            }
+                    else:
+                        # Fallback to simplified box if no bounds or corners available
+                        obj_width = 0.5
+                        obj_height = 0.5
+                        corners_3d = [
+                            {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
+                            {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
+                            {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']},
+                            {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']}
+                        ]
+                        corners_2d = [self.env.project_3d_to_2d(corner) for corner in corners_3d]
+                        x_coords = [x for x, y in corners_2d]
+                        y_coords = [y for x, y in corners_2d]
+                        bbox = {
+                            'x1': min(x_coords),
+                            'y1': min(y_coords),
+                            'x2': max(x_coords),
+                            'y2': max(y_coords)
+                        }
+                        obj_corners = []
+                    
+                    # Add object info with bbox
+                    obj_info = {
+                        'objectId': obj['objectId'],
+                        'objectType': obj['objectType'],
+                        'position': obj['position'],
+                        'bbox': bbox,
+                        'visible': obj['visible'],
+                        'bounds': obj_bounds,
+                        'corners': obj_corners if 'obj_corners' in locals() else []
+                    }
+                    objects_with_bbox.append(obj_info)
+
+            object_info = {
+                'objects': event.metadata['objects'],  # All objects in the scene
+                'visible_objects': objects_with_bbox,  # Objects visible in current frame with 2D bounding boxes
+                'object_states': {
+                    'cleaned': list(self.env.cleaned_objects),
+                    'heated': list(self.env.heated_objects),
+                    'cooled': list(self.env.cooled_objects)
+                },
+                'camera_info': {
+                    'position': event.metadata.get('cameraPosition', {}),
+                    'rotation': event.metadata.get('cameraRotation', {})
+                }
+            }
+            #*******************
+
             # expert action
             if self.train_eval == "train":
                 game_state = {
@@ -271,6 +371,7 @@ class AlfredThorEnv(object):
                 won,
                 goal_condition_success_rate,
                 expert_actions,
+                object_info,
             )
 
         def get_last_frame(self):
@@ -437,7 +538,7 @@ class AlfredThorEnv(object):
         # wait for all threads
         for n in range(self.batch_size):
             self.action_queues[n].join()
-            feedback, done, acs, won, gc_sr, expert_actions = self.envs[n].get_results()
+            feedback, done, acs, won, gc_sr, expert_actions, object_info = self.envs[n].get_results()
             obs.append(feedback)
             dones.append(done)
             admissible_commands.append(acs)
@@ -452,6 +553,7 @@ class AlfredThorEnv(object):
             "goal_condition_success_rate": gc_srs,
             "extra.gamefile": gamefiles,
             "extra.expert_plan": expert_plans,
+            "extra.object_info": object_info,
         }
         return obs, dones, infos
 

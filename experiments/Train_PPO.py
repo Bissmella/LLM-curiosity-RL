@@ -426,6 +426,7 @@ def main(config_args):
                 ]
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
+            
             if config_args.rl_script_args.name_environment=='AlfredTWEnv':  
                 infos["goal"] = _goal
                 infos["description"] = [o[__i].split("\n\n")[0:] for __i in range(len(o))]
@@ -435,6 +436,15 @@ def main(config_args):
                     infos["description"][i][-1] = o[i]
             else:
                 frames = train_env.get_frames()
+                #*******
+                vis_output_dir = os.path.join(config_args.rl_script_args.output_dir, "visualizations")
+                # for env_id in range(config_args.rl_script_args.number_envs):
+                #     # Get object info for this environment
+                #     breakpoint()
+                env_object_info = infos.get('extra.object_info', {})
+                visualize_bboxes(frames, env_object_info, vis_output_dir)
+                breakpoint()
+                #***********
                 _frames = []
                 vlm_prompt=[]
                 for _i in range(frames.shape[0]):
@@ -626,6 +636,60 @@ def main(config_args):
         lm_server.close()
         exit()
 
+
+
+
+
+def visualize_bboxes(frames, object_info, output_dir, env_id=0):
+    """
+    Visualize bounding boxes on the images and save them to the output folder.
+    
+    Args:
+        frames: numpy array of images
+        object_info: dictionary containing object information including bounding boxes
+        output_dir: directory to save the visualized images
+        env_id: environment ID for naming the output file
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Process each frame
+    for i in range(frames.shape[0]):
+        # Convert BGR to RGB for visualization
+        img = cv2.cvtColor(frames[i, :, :, :], cv2.COLOR_BGR2RGB)
+        
+        # Get visible objects for this environment
+        visible_objects = object_info.get('visible_objects', [])
+        
+        # Draw bounding boxes for each visible object
+        for obj in visible_objects:
+            # Get bounding box coordinates
+            bbox = obj.get('bbox', {})
+            if not bbox:
+                continue
+                
+            # Get object type and ID
+            obj_type = obj.get('objectType', 'Unknown')
+            obj_id = obj.get('objectId', 'Unknown')
+            
+            # Convert normalized coordinates to pixel coordinates
+            h, w = img.shape[:2]
+            x1 = int(bbox.get('x1', 0) * w)
+            y1 = int(bbox.get('y1', 0) * h)
+            x2 = int(bbox.get('x2', 1) * w)
+            y2 = int(bbox.get('y2', 1) * h)
+            
+            # Draw rectangle
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Add label
+            label = f"{obj_type} ({obj_id})"
+            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        # Save the image
+        output_path = os.path.join(output_dir, f"env_{env_id}_frame_{i}.png")
+        cv2.imwrite(output_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+        print(f"Saved visualization to {output_path}")
 
 if __name__ == "__main__":
     main()

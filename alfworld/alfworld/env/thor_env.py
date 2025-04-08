@@ -620,3 +620,34 @@ class ThorEnv(Controller):
     @staticmethod
     def decompress_mask(compressed_mask):
         return image_util.decompress_mask(compressed_mask)
+    #****
+    def project_3d_to_2d(self, point_3d):
+        """
+        Project a 3D point to 2D normalized coordinates (between 0 and 1)
+        Returns: (x, y) in normalized coordinates
+        """
+        # Get camera parameters from the last event
+        camera_position = self.last_event.metadata['agent']['position']
+        camera_rotation = self.last_event.metadata['agent']['rotation']
+        
+        # Calculate relative position
+        relative_pos = {
+            'x': point_3d['x'] - camera_position['x'],
+            'y': point_3d['y'] - camera_position['y'],
+            'z': point_3d['z'] - camera_position['z']
+        }
+        
+        # Apply camera rotation
+        # Note: This is a simplified projection. You might need to adjust based on your exact camera model
+        screen_x = (relative_pos['x'] * np.cos(camera_rotation['y']) - 
+                   relative_pos['z'] * np.sin(camera_rotation['y']))
+        screen_y = (relative_pos['y'] * np.cos(camera_rotation['x']) - 
+                   relative_pos['z'] * np.sin(camera_rotation['x']))
+        
+        # Normalize to [0, 1] range
+        # Assuming a field of view that maps -1 to 1 to 0 to 1
+        screen_x = (screen_x + 1) / 2
+        screen_y = (screen_y + 1) / 2
+        
+        return screen_x, screen_y
+        #*********
