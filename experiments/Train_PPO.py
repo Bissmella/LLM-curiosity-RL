@@ -2,6 +2,18 @@
 PPO implementation taken from https://github.com/openai/spinningup
 """
 
+import sys
+import os
+
+# Add the root directory (one level up from current file)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
+#TODO   SENSITIVE HERE!!!!!!11
+from huggingface_hub import login
+login("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")
+
+
 from collections import OrderedDict
 from typing import List
 from torch.nn.functional import log_softmax
@@ -307,6 +319,7 @@ def main(config_args):
             ),
         },
     )
+    print("here!")
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()

@@ -242,9 +242,10 @@ class HF_LLM(BaseLLM):
                 inputs = self._VLM_processor(
                     text=prompt, images=frames, return_tensors="pt"
                 )
+                
                 generated_ids = self._VLM_model.generate(
-                    input_ids=inputs["input_ids"].cuda(),
-                    pixel_values=inputs["pixel_values"].cuda(),
+                    input_ids=inputs["input_ids"].to(self._VLM_model.device),
+                    pixel_values=inputs["pixel_values"].to(self._VLM_model.device),
                     max_new_tokens=1024,
                     do_sample=sample,
                     num_beams=3,
@@ -410,6 +411,7 @@ class HF_LLM(BaseLLM):
                 lamorel_logger.debug(
                     f"Calling forward on process {self.accelerator.process_index}"
                 )
+                
                 _outputs = self._LLM_model(**minibatch)  # Get scores before softmax
                 lamorel_logger.debug(
                     f"Forward succeeded on process {self.accelerator.process_index}"

@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: alfworld
 Version: 0.3.5
 Summary: ALFWorld - Aligning Text and Embodied Environments for Interactive Learning.
@@ -29,7 +29,7 @@ Requires-Dist: ai2thor==2.1.0
 Requires-Dist: opencv-python
 Requires-Dist: pandas
 Requires-Dist: textworld[pddl]>=1.6.1
-Requires-Dist: torch
+Requires-Dist: torch==2.4.0
 Requires-Dist: torchvision
 Requires-Dist: tqdm
 Requires-Dist: werkzeug==2.0.3
@@ -38,7 +38,7 @@ Requires-Dist: ai2thor==2.1.0; extra == "full"
 Requires-Dist: opencv-python; extra == "full"
 Requires-Dist: pandas; extra == "full"
 Requires-Dist: textworld[pddl]>=1.6.1; extra == "full"
-Requires-Dist: torch; extra == "full"
+Requires-Dist: torch==2.4.0; extra == "full"
 Requires-Dist: torchvision; extra == "full"
 Requires-Dist: tqdm; extra == "full"
 Requires-Dist: werkzeug==2.0.3; extra == "full"
@@ -46,3 +46,8 @@ Requires-Dist: h5py; extra == "full"
 Requires-Dist: pycocotools; extra == "full"
 Requires-Dist: transformers; extra == "full"
 Requires-Dist: visdom; extra == "full"
+Dynamic: license
+Dynamic: license-file
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: summary

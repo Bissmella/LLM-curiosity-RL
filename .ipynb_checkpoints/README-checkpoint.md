@@ -25,15 +25,8 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
 
 ### Install Alfworld
 
-    cd alfworld/TextWorld
+    cd alfword/TextWorld
     pip install -e .[full]
-    python glk_build.py
-    ```
-    for above this worked:
-    conda install cython
-    conda install numpy
-    pip install --no-build-isolation -e .[full]
-    ```
 
     pip install torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cu118
 
@@ -48,7 +41,6 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
 ### Download Alfworld episodes data
     export ALFWORLD_DATA=<storage_path>
     alfworld-download
-    change data path in alfworld configs to your custom path
 ## RUN PPO Training
     python3 -m lamorel_launcher.launch 
             --config-path "./experiment/configs/" 
@@ -75,25 +67,3 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
 
 
 
-
-python3 -m lamorel_launcher.launch \
-    --config-path "/home/bahaduri/VIPER/experiments/configs/" \
-    --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_PPO.py" \
-    rl_script_args.output_dir=.  \
-    lamorel_args.accelerate_args.machine_rank=0 \
-    lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
-    lamorel_args.llm_args.model_type="causal" \
-    rl_script_args.seed=3 \
-    rl_script_args.number_envs=2 \
-    rl_script_args.task=[2] \
-    lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
-    wandb_args.run=Examine_in_light 
-    lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \
-    wandb_args.mode="offline" \
-    lamorel_args.distributed_setup_args.n_llm_processes=2 \
-    rl_script_args.transitions_buffer_len=5 \
-    rl_script_args.epochs=500 \
-    rl_script_args.gradient_batch_size=2 \
-    rl_script_args.name_environment="AlfredTWEnv" \
-    rl_script_args.startepochs=0 

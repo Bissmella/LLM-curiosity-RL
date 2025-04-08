@@ -2,7 +2,7 @@ ai2thor==2.1.0
 opencv-python
 pandas
 textworld[pddl]>=1.6.1
-torch
+torch==2.4.0
 torchvision
 tqdm
 werkzeug==2.0.3

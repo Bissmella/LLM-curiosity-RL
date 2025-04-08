@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: lamorel
 Version: 0.2
 Author: Clément Romac (Hugging Face & Inria)
@@ -8,3 +8,6 @@ Requires-Dist: hydra-core
 Requires-Dist: torch>=2.1.0
 Provides-Extra: quantization
 Requires-Dist: bitsandbytes>=0.41.1; extra == "quantization"
+Dynamic: author
+Dynamic: provides-extra
+Dynamic: requires-dist
