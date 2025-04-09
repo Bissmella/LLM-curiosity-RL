@@ -679,12 +679,12 @@ def visualize_bboxes(frames, object_info, output_dir, env_id=0):
             x2 = int(bbox.get('x2', 1) * w)
             y2 = int(bbox.get('y2', 1) * h)
             
-            # Draw rectangle
-            # cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            Draw rectangle
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
-            # # Add label
-            # label = f"{obj_type} ({obj_id})"
-            # cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # Add label
+            label = f"{obj_type} ({obj_id})"
+            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         # Save the image
         output_path = os.path.join(output_dir, f"env_{env_id}_frame_{i}.png")
