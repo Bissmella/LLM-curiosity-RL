@@ -621,11 +621,12 @@ class ThorEnv(Controller):
     def decompress_mask(compressed_mask):
         return image_util.decompress_mask(compressed_mask)
     #****
+    """
     def project_3d_to_2d(self, point_3d):
-        """
-        Project a 3D point to 2D normalized coordinates (between 0 and 1)
-        Returns: (x, y) in normalized coordinates
-        """
+        
+        #Project a 3D point to 2D normalized coordinates (between 0 and 1)
+        #Returns: (x, y) in normalized coordinates
+        
         # Get camera parameters from the last event
         camera_position = self.last_event.metadata['agent']['position']
         camera_rotation = self.last_event.metadata['agent']['rotation']
@@ -648,6 +649,67 @@ class ThorEnv(Controller):
         # Assuming a field of view that maps -1 to 1 to 0 to 1
         screen_x = (screen_x + 1) / 2
         screen_y = (screen_y + 1) / 2
+        
+        return screen_x, screen_y
+    """
+    def project_3d_to_2d(self, point_3d):
+        """
+        Project a 3D point to 2D normalized coordinates using proper perspective projection.
+        Returns: (x, y) in normalized coordinates [0,1]
+        """
+        from alfworld.gen import constants
+        
+        # Get camera parameters from the last event
+        camera_position = self.last_event.metadata['agent']['position']
+        camera_rotation = self.last_event.metadata['agent']['rotation']
+        camera_horizon = self.last_event.metadata['agent']['cameraHorizon']
+        
+        # Calculate relative position
+        relative_pos = np.array([
+            point_3d['x'] - camera_position['x'],
+            point_3d['y'] - camera_position['y'],
+            point_3d['z'] - camera_position['z']
+        ])
+        
+        # Convert rotation angles to radians
+        rot_y = np.radians(camera_rotation['y'])
+        rot_x = np.radians(camera_horizon)
+        
+        # Create rotation matrices
+        Ry = np.array([
+            [np.cos(rot_y), 0, np.sin(rot_y)],
+            [0, 1, 0],
+            [-np.sin(rot_y), 0, np.cos(rot_y)]
+        ])
+        
+        Rx = np.array([
+            [1, 0, 0],
+            [0, np.cos(rot_x), -np.sin(rot_x)],
+            [0, np.sin(rot_x), np.cos(rot_x)]
+        ])
+        
+        # Apply rotations
+        rotated_pos = Rx @ Ry @ relative_pos
+        
+        # Perspective projection
+        # Assuming 90-degree field of view (can be adjusted based on actual FOV)
+        fov = 90
+        focal_length = constants.SCREEN_WIDTH / (2 * np.tan(np.radians(fov/2)))
+        
+        if rotated_pos[2] <= 0:  # Behind camera
+            return 0.5, 0.5  # Return center of screen
+        
+        # Project to screen space
+        screen_x = (rotated_pos[0] * focal_length / rotated_pos[2]) + constants.SCREEN_WIDTH/2
+        screen_y = (rotated_pos[1] * focal_length / rotated_pos[2]) + constants.SCREEN_HEIGHT/2
+        
+        # Normalize to [0,1]
+        screen_x = screen_x / constants.SCREEN_WIDTH
+        screen_y = screen_y / constants.SCREEN_HEIGHT
+        
+        # Clamp to [0,1]
+        screen_x = np.clip(screen_x, 0, 1)
+        screen_y = np.clip(screen_y, 0, 1)
         
         return screen_x, screen_y
         #*********
