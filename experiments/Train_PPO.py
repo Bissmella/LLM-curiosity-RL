@@ -60,6 +60,8 @@ import alfworld.agents.environment as environment
 import alfworld.agents.modules.generic as generic
 import yaml
 
+from object_extractor import ObjectExtractor
+
 class PPOUpdater(BaseUpdater):
     def __init__(
         self,
@@ -270,6 +272,8 @@ prompt_generator = [prompt_maker,prompt_maker,Glam_prompt, swap_prompt, xml_prom
 lamorel_init()
 
 
+obj_extractor = ObjectExtractor(use_spacy=False)
+
 @hydra.main(config_path="config", config_name="config")
 def main(config_args):
     
@@ -443,7 +447,7 @@ def main(config_args):
                 #     breakpoint()
                 env_object_info = infos.get('extra.object_info', {})
                 visualize_bboxes(frames, env_object_info, vis_output_dir)
-                breakpoint()
+                
                 #***********
                 _frames = []
                 vlm_prompt=[]
@@ -452,6 +456,10 @@ def main(config_args):
                         vlm_prompt.append(f"<DETAILED_CAPTION>")
                     #<DETAILED_CAPTION>
                 description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
+                entities = obj_extractor.extract_objects_from_text(description[0])
+                srcs = [i['objectType'] for i in env_object_info['visible_objects']]
+                matching_score = obj_extractor.calculate_overlap_score_transformer(srcs, entities) # calculating the matching score between objects mentioned in VLM and the ones visible in the frame.
+                breakpoint()
                 infos["description"]=[]
                 for i in range(config_args.rl_script_args.number_envs):
                     infos["description"].append([description[i].split("Assistant:")[-1]])
@@ -679,7 +687,7 @@ def visualize_bboxes(frames, object_info, output_dir, env_id=0):
             x2 = int(bbox.get('x2', 1) * w)
             y2 = int(bbox.get('y2', 1) * h)
             
-            Draw rectangle
+            #Draw rectangle
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             
             # Add label

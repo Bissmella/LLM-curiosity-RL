@@ -1,4 +1,4 @@
-spacy>=3.0.0
 transformers>=4.0.0
 torch>=1.8.0
-numpy>=1.19.0 
+numpy>=1.19.0
+sentence_transformers==3.4.1

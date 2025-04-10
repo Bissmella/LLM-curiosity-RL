@@ -97,3 +97,8 @@ python3 -m lamorel_launcher.launch \
     rl_script_args.gradient_batch_size=2 \
     rl_script_args.name_environment="AlfredTWEnv" \
     rl_script_args.startepochs=0 
+
+
+
+## environment changes:
+numpy 2.02 --> 1.26 for spacy
