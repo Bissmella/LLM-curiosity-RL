@@ -11,6 +11,8 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 
 login("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")
+import transformers
+transformers.set_seed(42)
 
 class ObjectExtractor:
     def __init__(self, use_spacy: bool = True):
@@ -325,10 +327,10 @@ class ObjectExtractor:
         else:
             # Use transformer-based NER
             messages = [
-                        {"role": "system", "content": "You are a text processor only producing list of comma seperated object names that exists in a given cotent by the user, without extra words!"},
+                        {"role": "system", "content": "You are a text processor. Produce an inclusive, comma-separated list of all object names including furniture or surfaces mentioned in the given text by the user. without extra words!"},
                         {"role": "user", "content": text},
                     ]
-            ner_results = self.ner(messages, max_new_tokens=256)[0]["generated_text"][-1]['content']
+            ner_results = self.ner(messages, max_new_tokens=256, temperature =0.1)[0]["generated_text"][-1]['content']
             objects = []
             items = ner_results.split(",")
 

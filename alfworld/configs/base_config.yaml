@@ -3,6 +3,7 @@ dataset:
   eval_id_data_path: '/home/bahaduri/VIPER/data/json_2.1.1/valid_seen' # '/lustre/fswork/projects/rech/lrp/ufn64rt/data/json_2.1.1/valid_seen'    # null/None to disable
   eval_ood_data_path: '/home/bahaduri/VIPER/data/json_2.1.1/valid_unseen' #'/lustre/fswork/projects/rech/lrp/ufn64rt/data/json_2.1.1/valid_unseen' # null/None to disable
   eval_train_unseen_text: '/lustre/fswork/projects/rech/lrp/ufn64rt/data/json_2.1.1/train_unseen_text'
+  valid_train: "/home/bahaduri/VIPER/data/json_2.1.1/valid_train"
   num_train_games: -1                                          # max training games (<=0 indicates full dataset)
   num_eval_games: -1                                           # max evaluation games (<=0 indicates full dataset)
 

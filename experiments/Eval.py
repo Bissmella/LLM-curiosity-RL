@@ -2,6 +2,13 @@
 PPO implementation taken from https://github.com/openai/spinningup
 """
 
+import sys
+import os
+
+# Add the root directory (one level up from current file)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 from collections import OrderedDict
 from typing import List
 from torch.nn.functional import log_softmax
@@ -405,6 +412,7 @@ def main(config_args):
         epit=0
         while not torch.all(torch.tensor(d)):
             # generate_prompt=sample(prompt_generator,1)[0]
+            breakpoint()
             epit+=1
             possible_actions = [list(filter(lambda x: x not in ["look","inventory"]  , _i["possible_actions"])) for _i in infos]
             

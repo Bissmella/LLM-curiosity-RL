@@ -4,10 +4,10 @@ python3 -m lamorel_launcher.launch \
     rl_script_args.path="/home/bahaduri/VIPER/experiments/Eval.py" \
     rl_script_args.output_dir=.  \
     lamorel_args.accelerate_args.machine_rank=0 \
-    lamorel_args.llm_args.model_path="EleutherAI/pythia-70m" \
+    lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B" \
     lamorel_args.llm_args.model_type="causal" \
     rl_script_args.seed=3 \
-    rl_script_args.number_envs=1 \
+    rl_script_args.number_envs=2 \
     rl_script_args.task=[2] \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run=Examine_in_light \
