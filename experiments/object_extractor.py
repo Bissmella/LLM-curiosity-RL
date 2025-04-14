@@ -27,7 +27,7 @@ class ObjectExtractor:
             import spacy
             self.nlp = spacy.load("en_core_web_sm")
         else:
-            login("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")
+            #login("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")
             model_id = "meta-llama/Llama-3.2-1B-Instruct"
             self.ner = pipeline(
                 "text-generation",
@@ -424,15 +424,19 @@ class ObjectExtractor:
         overlap_score = total_score / len(source_objects)
         return overlap_score, matches
     
-    def calculate_overlap_score_transformer(self, source_objects, vlm_objects, threshold=0.8):
+    def calculate_overlap_score_transformer(self, source_objects, vlm_objects, threshold=0.7):
         # Encode both lists in batch
         source_objects = list(set(source_objects))
         vlm_objects = list(set(vlm_objects))
-        source_embs = self.sim_model.encode(source_objects, convert_to_tensor=True)
-        vlm_embs = self.sim_model.encode(vlm_objects, convert_to_tensor=True)
+        if len(source_objects) == 0:
+            return 1, []
+        elif len(source_objects)> 0 and len(vlm_objects) == 0:
+            return 0, []
+        source_embs = self.sim_model.encode(source_objects, convert_to_tensor=True, show_progress_bar=False)
+        vlm_embs = self.sim_model.encode(vlm_objects, convert_to_tensor=True, show_progress_bar=False)
 
         # Compute cosine similarities for all pairs
-        cosine_scores = util.cos_sim(source_embs, vlm_embs)  # shape: [len(source), len(vlm)]
+        cosine_scores = util.cos_sim(source_embs, vlm_embs.to(source_embs.device))  # shape: [len(source), len(vlm)]
 
         matches = {}
         total_score = 0.0
@@ -446,7 +450,7 @@ class ObjectExtractor:
                 total_score += 1
 
         overlap_score = total_score / len(source_objects)
-        return overlap_score#, matches
+        return overlap_score, list(matches.keys())
 
 
     def calculate_batch_overlap_scores(self, source_objects: List[List[str]], 

@@ -364,6 +364,7 @@ class AlfredThorEnv(object):
             else:
                 raise NotImplementedError
             self._done = won or self.steps > max_nb_steps_per_episode
+            object_info = [object_info]
             return (
                 self._feedback,
                 self._done,

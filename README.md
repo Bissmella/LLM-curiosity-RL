@@ -102,3 +102,7 @@ python3 -m lamorel_launcher.launch \
 
 ## environment changes:
 numpy 2.02 --> 1.26 for spacy
+
+
+## important to note:
+eval only works for 1 environment.

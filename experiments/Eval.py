@@ -57,6 +57,11 @@ import yaml
 
 from object_extractor import ObjectExtractor
 
+#TODO   SENSITIVE HERE!!!!!!11
+from huggingface_hub import login
+login("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")
+
+
 class PPOUpdater(BaseUpdater):
     def __init__(
         self,
@@ -322,7 +327,7 @@ def main(config_args):
         display = Display(visible=0, size=(1024, 768))
         display.start()
     config = load_config(config_args.lamorel_args.config_alfred)
-    config["env"]["task_types"]=[config_args.rl_script_args.task]
+    config["env"]["task_types"]=config_args.rl_script_args.task  #Previous bugged
     
     if config_args.rl_script_args.name_environment=='AlfredTWEnv':
         env = getattr(environment, config_args.rl_script_args.name_environment)(config,config_args.rl_script_args.train_eval)
@@ -370,9 +375,14 @@ def main(config_args):
     generate_prompt = prompt_generator[config_args.rl_script_args.prompt_id]
     jump=config_args.rl_script_args.number_envs
     
+    #output analysis
+    all_analysis = []
+
     for i in tqdm(range(max_episods), desc="Evaluation"):
         promptsave=[]
         imagessave=[]
+        
+        traj = [{} for _ in range(config_args.rl_script_args.number_envs)] # trajectory full info for analysis
         if config_args.rl_script_args.name_environment=='AlfredTWEnv':
             train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs,game_files=files[i*jump:(i+1)*jump])
             (o, infos), ep_ret, ep_len = ( train_env.reset(),[0 for _ in range(config_args.rl_script_args.number_envs)],[0 for _ in range(config_args.rl_script_args.number_envs)],)
@@ -390,7 +400,9 @@ def main(config_args):
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
         else:
             o, infos = train_env.reset(json_file_id=i * config_args.rl_script_args.number_envs)
-
+            #TODO following does not work for more than 1 environments.
+            env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)]  #includes object info regarding objects in the env such as visible objects
+            gt_obs = [o[__i].split("\n\n")[1] for __i in range(len(o))]  #ground truth observation on reset  for analysis
             past_actions=["" for _ in range(config_args.rl_script_args.number_envs)]
             frames = train_env.get_frames()
             _frames = []
@@ -399,20 +411,29 @@ def main(config_args):
                     _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
                     #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
                     vlm_prompt.append(f"<DETAILED_CAPTION>")
-            description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)  
+            description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
             infos["description"]=[]
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
             for i in range(config_args.rl_script_args.number_envs):
-                    infos["description"].append( [description[i].split("Assistant:")[-1]])
+                    try:
+                        infos["description"].append( [description[i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text']
+                    except:
+                        infos["description"].append( [description[i].split("Assistant:")[-1]])
                 
             _goal = infos["goal"]
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
         d = [False for _ in range(config_args.rl_script_args.number_envs)]
         transitions_buffer = [[] for _ in range(config_args.rl_script_args.number_envs)]
         epit=0
+
+        #for analysis data
+        for d in range(config_args.rl_script_args.number_envs):
+            traj[d]['task'] = infos[d]['goal']
+            traj[d]['steps'] = []
+            traj[d]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[d]['goal'])
         while not torch.all(torch.tensor(d)):
             # generate_prompt=sample(prompt_generator,1)[0]
-            breakpoint()
+            
             epit+=1
             possible_actions = [list(filter(lambda x: x not in ["look","inventory"]  , _i["possible_actions"])) for _i in infos]
             
@@ -420,6 +441,8 @@ def main(config_args):
             ]
             promptsave.append(prompts[0])
             imagessave.append(cv2.cvtColor(train_env.get_frames()[0,:,:,:], cv2.COLOR_BGR2RGB))
+
+            
             
             output = lm_server.custom_module_fns(
                 ["score", "value"], contexts=prompts, candidates=possible_actions
@@ -443,8 +466,35 @@ def main(config_args):
                 transitions_buffer[j] = transitions_buffer[j][
                     -config_args.rl_script_args.transitions_buffer_len :
                 ]
+
+
+            #do anlysis and store the analysis
+            entities = []
+            main_entities = []
+            visible_obj = []
+            matching_score = []
+            for d in range(config_args.rl_script_args.number_envs):
+                entities.append(obj_extractor.extract_objects_from_text(infos[d]['obs'][0]))  #objects mentioned in the vlm description
+                visible_obj.append([vis_obj['objectType'] for vis_obj in env_object_info[d]['visible_objects']]) #visible objects
+                obj_extractor.calculate_overlap_score_transformer(traj[d]['goal_entities'], visible_obj[d])
+                #main_entities.append(list(set(visible_obj[d]) & set(traj[d]['goal_entities'])))  #intersection of the goal entities and entities (vlm entities)
+                matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[d]['goal_entities'], visible_obj[d])[1]  #intersection of the goal entities and entities (vlm entities)
+                main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
+                matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[d], entities[d])[0])
+                traj[d]['steps'].append(
+                    {
+                        'vlm_desc': infos[d]['obs'][0],
+                        'text_desc': gt_obs[d],
+                        'vis_obj': visible_obj[d],
+                        'main_obj': main_entities[d],
+                        'vlm_obj': entities[d],
+                        'matching_score': matching_score[d]
+                    }
+                )
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
+            gt_obs = [o[_i] for i in range(len(o))]  #ground truth textual observations for analysis
+            env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)] #ground truth objects info for analysis
             #print(r,d)
             if config_args.rl_script_args.name_environment=='AlfredTWEnv':  
                 infos["goal"] = _goal
@@ -470,17 +520,19 @@ def main(config_args):
             s = infos["won"] * 1
             
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)
-            
+
             s = np.multiply(s, 1)
-        
+
+
         success += list(s)
         if s==1:
             eplen.append(epit)
-
+        for d in range(config_args.rl_script_args.number_envs):
+            traj[d]['success'] = s.item()
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
-        
+        all_analysis.extend(traj)
         print("wait 5sec")
-        p=f"/lustre/fsn1/projects/rech/lrp/commun/exempledata6/{_goal[0]}{int(np.mean(success)*100)}"
+        p=f"/home/bahaduri/VIPER/outputs/success_txt/{_goal[0]}{int(np.mean(success)*100)}"
         if not os.path.exists(p):
             os.mkdir(p)
             file=open(f"{p}/text.txt","w")
@@ -492,6 +544,8 @@ def main(config_args):
             
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
+    with open("/home/bahaduri/VIPER/outputs/trajectories.json", "w") as f:
+        json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
     lm_server.close()        
         # Perform PPO update!

@@ -272,7 +272,6 @@ prompt_generator = [prompt_maker,prompt_maker,Glam_prompt, swap_prompt, xml_prom
 lamorel_init()
 
 
-obj_extractor = ObjectExtractor(use_spacy=False)
 
 @hydra.main(config_path="config", config_name="config")
 def main(config_args):
@@ -440,26 +439,14 @@ def main(config_args):
                     infos["description"][i][-1] = o[i]
             else:
                 frames = train_env.get_frames()
-                #*******
-                vis_output_dir = os.path.join(config_args.rl_script_args.output_dir, "visualizations")
-                # for env_id in range(config_args.rl_script_args.number_envs):
-                #     # Get object info for this environment
-                #     breakpoint()
-                env_object_info = infos.get('extra.object_info', {})
-                visualize_bboxes(frames, env_object_info, vis_output_dir)
                 
-                #***********
                 _frames = []
                 vlm_prompt=[]
                 for _i in range(frames.shape[0]):
                         _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
                         vlm_prompt.append(f"<DETAILED_CAPTION>")
                     #<DETAILED_CAPTION>
-                description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
-                entities = obj_extractor.extract_objects_from_text(description[0])
-                srcs = [i['objectType'] for i in env_object_info['visible_objects']]
-                matching_score = obj_extractor.calculate_overlap_score_transformer(srcs, entities) # calculating the matching score between objects mentioned in VLM and the ones visible in the frame.
-                breakpoint()
+
                 infos["description"]=[]
                 for i in range(config_args.rl_script_args.number_envs):
                     infos["description"].append([description[i].split("Assistant:")[-1]])
