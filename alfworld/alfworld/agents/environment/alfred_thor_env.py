@@ -235,86 +235,28 @@ class AlfredThorEnv(object):
             frame_shape = current_frame.shape
             
             # Process objects and create 2D bounding boxes
-            objects_with_bbox = []
+            objects_visible = []
             for obj in event.metadata['objects']:
                 # Only process visible objects in the current frame
                 if obj['visible']:
                     # Get object bounds from metadata
                     obj_bounds = obj.get('objectBounds', {})
                     
-                    # Check if obj_bounds is a dictionary and has objectBoundsCorners
-                    if isinstance(obj_bounds, dict) and 'objectBoundsCorners' in obj_bounds:
-                        obj_corners = obj_bounds['objectBoundsCorners']
-                        
-                        # If we have corners, use them directly
-                        if obj_corners:
-                            # Project corners to 2D
-                            corners_2d = [self.env.project_3d_to_2d(corner) for corner in obj_corners]
-                            
-                            # Calculate bounding box
-                            x_coords = [x for x, y in corners_2d]
-                            y_coords = [y for x, y in corners_2d]
-                            bbox = {
-                                'x1': min(x_coords),
-                                'y1': min(y_coords),
-                                'x2': max(x_coords),
-                                'y2': max(y_coords)
-                            }
-                        else:
-                            # Fallback to simplified box if no corners available
-                            obj_width = 0.5
-                            obj_height = 0.5
-                            corners_3d = [
-                                {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
-                                {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
-                                {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']},
-                                {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']}
-                            ]
-                            corners_2d = [self.env.project_3d_to_2d(corner) for corner in corners_3d]
-                            x_coords = [x for x, y in corners_2d]
-                            y_coords = [y for x, y in corners_2d]
-                            bbox = {
-                                'x1': min(x_coords),
-                                'y1': min(y_coords),
-                                'x2': max(x_coords),
-                                'y2': max(y_coords)
-                            }
-                    else:
-                        # Fallback to simplified box if no bounds or corners available
-                        obj_width = 0.5
-                        obj_height = 0.5
-                        corners_3d = [
-                            {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
-                            {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] - obj_height/2, 'z': obj['position']['z']},
-                            {'x': obj['position']['x'] - obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']},
-                            {'x': obj['position']['x'] + obj_width/2, 'y': obj['position']['y'] + obj_height/2, 'z': obj['position']['z']}
-                        ]
-                        corners_2d = [self.env.project_3d_to_2d(corner) for corner in corners_3d]
-                        x_coords = [x for x, y in corners_2d]
-                        y_coords = [y for x, y in corners_2d]
-                        bbox = {
-                            'x1': min(x_coords),
-                            'y1': min(y_coords),
-                            'x2': max(x_coords),
-                            'y2': max(y_coords)
-                        }
-                        obj_corners = []
+                    
                     
                     # Add object info with bbox
                     obj_info = {
                         'objectId': obj['objectId'],
                         'objectType': obj['objectType'],
                         'position': obj['position'],
-                        'bbox': bbox,
                         'visible': obj['visible'],
-                        'bounds': obj_bounds,
-                        'corners': obj_corners if 'obj_corners' in locals() else []
+                        'bounds': obj_bounds
                     }
-                    objects_with_bbox.append(obj_info)
+                    objects_visible.append(obj_info)
 
             object_info = {
                 'objects': event.metadata['objects'],  # All objects in the scene
-                'visible_objects': objects_with_bbox,  # Objects visible in current frame with 2D bounding boxes
+                'visible_objects': objects_visible,  # Objects visible in current frame with 2D bounding boxes
                 'object_states': {
                     'cleaned': list(self.env.cleaned_objects),
                     'heated': list(self.env.heated_objects),

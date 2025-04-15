@@ -139,8 +139,9 @@ class WeightsLoaderInitializer(BaseModelInitializer):
             hf_llm_module_dict = {
                 _k.replace("module.", ""): _v for _k, _v in loaded_ddp_dict.items()
             }
-            print("im here")
-            model.load_state_dict(state_dict=hf_llm_module_dict, strict= not True)
+            result = model.load_state_dict(state_dict=hf_llm_module_dict, strict= not True)
+            print("Missing keys: ", result.missing_keys)
+            print("unexpected keys: ", result.unexpected_keys)
         if self._vlm_weights_path is not None:
             loaded_ddp_dict = load_file(self._vlm_weights_path + "/adapter_model.safetensors")
             hf_llm_module_dict = {
