@@ -513,7 +513,10 @@ def main(config_args):
                 description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
                 infos["description"]=[]
                 for _i in range(config_args.rl_script_args.number_envs):
-                    infos["description"].append([description[_i].split("Assistant:")[-1]])
+                    try:
+                        infos["description"].append([description[_i].split("Assistant:")[-1]])
+                    except:
+                        infos["description"].append( [description[i]['text'].split("Assistant:")[-1]])
                 infos["goal"]=_goal
                 #print(r,d,infos["won"])
             # obss,infos=get_infos(infos,config_args.rl_script_args.number_envs)
@@ -532,7 +535,7 @@ def main(config_args):
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         all_analysis.extend(traj)
         print("wait 5sec")
-        p=f"/home/bahaduri/VIPER/outputs/success_txt/{_goal[0]}{int(np.mean(success)*100)}"
+        p=f"/home/bahaduri/VIPER/outputs/success_train_txt/{_goal[0]}{int(np.mean(success)*100)}"
         if not os.path.exists(p):
             os.mkdir(p)
             file=open(f"{p}/text.txt","w")
@@ -544,7 +547,7 @@ def main(config_args):
             
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
-    with open("/home/bahaduri/VIPER/outputs/trajectories.json", "w") as f:
+    with open("/home/bahaduri/VIPER/outputs/trajectories_train.json", "w") as f:
         json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
     lm_server.close()        

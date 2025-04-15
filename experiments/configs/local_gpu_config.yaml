@@ -30,7 +30,7 @@ lamorel_args:
 rl_script_args:
   path: null
   seed: 1
-  train_eval: "valid_train"  #valid  or train
+  train_eval: "train"  #valid_train  or train
   # ppo
   ppo_epochs: 4
   lam: 0.99
