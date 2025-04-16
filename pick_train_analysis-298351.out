@@ -213,3 +213,643 @@ Succeed task | ['Your task is to: put some candle on sidetable'] | current RS | 
 wait 5sec
 Resetting ThorEnv
 Task: put some candle on sidetable
+Succeed task | ['Your task is to: put some candle on sidetable'] | current RS | 0.3695652173913043 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put some box on armchair
+Succeed task | ['Your task is to: put some box on armchair'] | current RS | 0.3617021276595745 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put some box on armchair
+Succeed task | ['Your task is to: put some box on armchair'] | current RS | 0.3541666666666667 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put some box on armchair
+Succeed task | ['Your task is to: put some box on armchair'] | current RS | 0.3469387755102041 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put some cloth on toilet
+Succeed task | ['Your task is to: put some cloth on toilet'] | current RS | 0.34 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put a cloth in toilet
+Succeed task | ['Your task is to: put some cloth on toilet'] | current RS | 0.3333333333333333 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put some alarmclock on desk'] | current RS | 0.3269230769230769 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put a alarmclock in desk'] | current RS | 0.32075471698113206 current eplen | 5.882352941176471
+wait 5sec
+Resetting ThorEnv
+Task: put a tissuebox in toilet
+Succeed task | ['Your task is to: put some tissuebox on toilet'] | current RS | 0.3333333333333333 current eplen | 5.777777777777778
+wait 5sec
+Resetting ThorEnv
+Task: put a tissuebox in toilet
+Succeed task | ['Your task is to: put a tissuebox in toilet'] | current RS | 0.34545454545454546 current eplen | 5.684210526315789
+wait 5sec
+Resetting ThorEnv
+Task: put some remotecontrol on armchair
+Succeed task | ['Your task is to: put a remotecontrol in armchair'] | current RS | 0.35714285714285715 current eplen | 5.6
+wait 5sec
+Resetting ThorEnv
+Task: put some remotecontrol on armchair
+Succeed task | ['Your task is to: put a remotecontrol in armchair'] | current RS | 0.3684210526315789 current eplen | 6.0476190476190474
+wait 5sec
+Resetting ThorEnv
+Task: put some pen on shelf
+Succeed task | ['Your task is to: put some pen on shelf'] | current RS | 0.3620689655172414 current eplen | 6.0476190476190474
+wait 5sec
+Resetting ThorEnv
+Task: put a pen in shelf
+Succeed task | ['Your task is to: put a pen in shelf'] | current RS | 0.3728813559322034 current eplen | 5.818181818181818
+wait 5sec
+Resetting ThorEnv
+Task: put a laptop in bed
+Succeed task | ['Your task is to: put a laptop in bed'] | current RS | 0.36666666666666664 current eplen | 5.818181818181818
+wait 5sec
+Resetting ThorEnv
+Task: put some laptop on bed
+Succeed task | ['Your task is to: put a laptop in bed'] | current RS | 0.36065573770491804 current eplen | 5.818181818181818
+wait 5sec
+Resetting ThorEnv
+Task: put a laptop in bed
+Succeed task | ['Your task is to: put a laptop in bed'] | current RS | 0.3548387096774194 current eplen | 5.818181818181818
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in sidetable
+Succeed task | ['Your task is to: put a alarmclock in sidetable'] | current RS | 0.3492063492063492 current eplen | 5.818181818181818
+wait 5sec
+Resetting ThorEnv
+Task: put some dishsponge on cart
+Succeed task | ['Your task is to: put a dishsponge in cart'] | current RS | 0.359375 current eplen | 5.739130434782608
+wait 5sec
+Resetting ThorEnv
+Task: put a dishsponge in cart
+Succeed task | ['Your task is to: put a dishsponge in cart'] | current RS | 0.36923076923076925 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on countertop
+Succeed task | ['Your task is to: put some soapbottle on countertop'] | current RS | 0.36363636363636365 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on countertop
+Succeed task | ['Your task is to: put some soapbottle on countertop'] | current RS | 0.3582089552238806 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on countertop
+Succeed task | ['Your task is to: put some soapbottle on countertop'] | current RS | 0.35294117647058826 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on sofa
+Succeed task | ['Your task is to: put some keychain on sofa'] | current RS | 0.34782608695652173 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put a keychain in sofa
+Succeed task | ['Your task is to: put a keychain in sofa'] | current RS | 0.34285714285714286 current eplen | 5.666666666666667
+wait 5sec
+Resetting ThorEnv
+Task: put a soapbottle in toilet
+Succeed task | ['Your task is to: put some soapbottle on toilet'] | current RS | 0.352112676056338 current eplen | 5.6
+wait 5sec
+Resetting ThorEnv
+Task: put a soapbottle in toilet
+Succeed task | ['Your task is to: put some soapbottle on toilet'] | current RS | 0.3611111111111111 current eplen | 5.538461538461538
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on toilet
+Succeed task | ['Your task is to: put some soapbottle on toilet'] | current RS | 0.3698630136986301 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in garbagecan
+Succeed task | ['Your task is to: put some handtowel on garbagecan'] | current RS | 0.36486486486486486 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in garbagecan
+Succeed task | ['Your task is to: put a handtowel in garbagecan'] | current RS | 0.36 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put some handtowel on garbagecan
+Succeed task | ['Your task is to: put some handtowel on garbagecan'] | current RS | 0.35526315789473684 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put a toiletpaper in toiletpaperhanger
+Succeed task | ['Your task is to: put some toiletpaper on toiletpaperhanger'] | current RS | 0.35064935064935066 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put a candle in countertop
+Succeed task | ['Your task is to: put some candle on countertop'] | current RS | 0.34615384615384615 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on countertop
+Succeed task | ['Your task is to: put some candle on countertop'] | current RS | 0.34177215189873417 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on countertop
+Succeed task | ['Your task is to: put a candle in countertop'] | current RS | 0.3375 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbar on cart
+Succeed task | ['Your task is to: put a soapbar in cart'] | current RS | 0.3333333333333333 current eplen | 5.481481481481482
+wait 5sec
+Resetting ThorEnv
+Task: put a pan in diningtable
+Succeed task | ['Your task is to: put a pan in diningtable'] | current RS | 0.34146341463414637 current eplen | 5.464285714285714
+wait 5sec
+Resetting ThorEnv
+Task: put a pan in diningtable
+Succeed task | ['Your task is to: put a pan in diningtable'] | current RS | 0.3493975903614458 current eplen | 5.413793103448276
+wait 5sec
+Resetting ThorEnv
+Task: put a toiletpaper in toiletpaperhanger
+Succeed task | ['Your task is to: put a toiletpaper in toiletpaperhanger'] | current RS | 0.34523809523809523 current eplen | 5.413793103448276
+wait 5sec
+Resetting ThorEnv
+Task: put a toiletpaper in toiletpaperhanger
+Succeed task | ['Your task is to: put some toiletpaper on toiletpaperhanger'] | current RS | 0.3411764705882353 current eplen | 5.413793103448276
+wait 5sec
+Resetting ThorEnv
+Task: put some newspaper on armchair
+Succeed task | ['Your task is to: put a newspaper in armchair'] | current RS | 0.3372093023255814 current eplen | 5.413793103448276
+wait 5sec
+Resetting ThorEnv
+Task: put some newspaper on armchair
+Succeed task | ['Your task is to: put a newspaper in armchair'] | current RS | 0.3448275862068966 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put some newspaper on armchair
+Succeed task | ['Your task is to: put a newspaper in armchair'] | current RS | 0.3409090909090909 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put a alarmclock in desk'] | current RS | 0.33707865168539325 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put some alarmclock on desk
+Succeed task | ['Your task is to: put some alarmclock on desk'] | current RS | 0.3333333333333333 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put some alarmclock on desk'] | current RS | 0.32967032967032966 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put some vase on safe
+Succeed task | ['Your task is to: put a vase in safe'] | current RS | 0.32608695652173914 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a vase in safe
+Succeed task | ['Your task is to: put a vase in safe'] | current RS | 0.3225806451612903 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a vase in safe
+Succeed task | ['Your task is to: put some vase on safe'] | current RS | 0.3191489361702128 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a pencil in garbagecan
+Succeed task | ['Your task is to: put a pencil in garbagecan'] | current RS | 0.3157894736842105 current eplen | 5.4
+wait 5sec
+Resetting ThorEnv
+Task: put a pencil in garbagecan
+Succeed task | ['Your task is to: put some pencil on garbagecan'] | current RS | 0.3229166666666667 current eplen | 5.387096774193548
+wait 5sec
+Resetting ThorEnv
+Task: put a kettle in stoveburner
+Succeed task | ['Your task is to: put a kettle in stoveburner'] | current RS | 0.32989690721649484 current eplen | 5.34375
+wait 5sec
+Resetting ThorEnv
+Task: put a kettle in stoveburner
+Succeed task | ['Your task is to: put a kettle in stoveburner'] | current RS | 0.32653061224489793 current eplen | 5.34375
+wait 5sec
+Resetting ThorEnv
+Task: put some kettle on stoveburner
+Succeed task | ['Your task is to: put a kettle in stoveburner'] | current RS | 0.32323232323232326 current eplen | 5.34375
+wait 5sec
+Resetting ThorEnv
+Task: put a bowl in coffeetable
+Succeed task | ['Your task is to: put some bowl on coffeetable'] | current RS | 0.33 current eplen | 5.484848484848484
+wait 5sec
+Resetting ThorEnv
+Task: put some bowl on coffeetable
+Succeed task | ['Your task is to: put some bowl on coffeetable'] | current RS | 0.33663366336633666 current eplen | 5.735294117647059
+wait 5sec
+Resetting ThorEnv
+Task: put some tissuebox on toilet
+Succeed task | ['Your task is to: put a tissuebox in toilet'] | current RS | 0.3431372549019608 current eplen | 5.685714285714286
+wait 5sec
+Resetting ThorEnv
+Task: put some tissuebox on toilet
+Succeed task | ['Your task is to: put some tissuebox on toilet'] | current RS | 0.34951456310679613 current eplen | 5.638888888888889
+wait 5sec
+Resetting ThorEnv
+Task: put a book in sofa
+Succeed task | ['Your task is to: put a book in sofa'] | current RS | 0.34615384615384615 current eplen | 5.638888888888889
+wait 5sec
+Resetting ThorEnv
+Task: put some book on sofa
+Succeed task | ['Your task is to: put some book on sofa'] | current RS | 0.34285714285714286 current eplen | 5.638888888888889
+wait 5sec
+Resetting ThorEnv
+Task: put a book in sofa
+Succeed task | ['Your task is to: put some book on sofa'] | current RS | 0.33962264150943394 current eplen | 5.638888888888889
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbar on drawer
+Succeed task | ['Your task is to: put some soapbar on drawer'] | current RS | 0.34579439252336447 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put a soapbar in drawer
+Succeed task | ['Your task is to: put a soapbar in drawer'] | current RS | 0.3425925925925926 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put a spraybottle in garbagecan
+Succeed task | ['Your task is to: put a spraybottle in garbagecan'] | current RS | 0.3394495412844037 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put some spraybottle on garbagecan
+Succeed task | ['Your task is to: put some spraybottle on garbagecan'] | current RS | 0.33636363636363636 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on sofa
+Succeed task | ['Your task is to: put a keychain in sofa'] | current RS | 0.3333333333333333 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put a keychain in sofa
+Succeed task | ['Your task is to: put a keychain in sofa'] | current RS | 0.33035714285714285 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in toilet
+Succeed task | ['Your task is to: put a handtowel in toilet'] | current RS | 0.3274336283185841 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put some handtowel on toilet
+Succeed task | ['Your task is to: put some handtowel on toilet'] | current RS | 0.32456140350877194 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put some handtowel on toilet
+Succeed task | ['Your task is to: put some handtowel on toilet'] | current RS | 0.3217391304347826 current eplen | 5.864864864864865
+wait 5sec
+Resetting ThorEnv
+Task: put some tissuebox on coffeetable
+Succeed task | ['Your task is to: put some tissuebox on coffeetable'] | current RS | 0.3275862068965517 current eplen | 6.026315789473684
+wait 5sec
+Resetting ThorEnv
+Task: put some tissuebox on coffeetable
+Succeed task | ['Your task is to: put a tissuebox in coffeetable'] | current RS | 0.3333333333333333 current eplen | 6.102564102564102
+wait 5sec
+Resetting ThorEnv
+Task: put a tissuebox in coffeetable
+Succeed task | ['Your task is to: put a tissuebox in coffeetable'] | current RS | 0.3389830508474576 current eplen | 6.125
+wait 5sec
+Resetting ThorEnv
+Task: put a creditcard in shelf
+Succeed task | ['Your task is to: put a creditcard in shelf'] | current RS | 0.3445378151260504 current eplen | 6.195121951219512
+wait 5sec
+Resetting ThorEnv
+Task: put a creditcard in shelf
+Succeed task | ['Your task is to: put some creditcard on shelf'] | current RS | 0.35 current eplen | 6.142857142857143
+wait 5sec
+Resetting ThorEnv
+Task: put a creditcard in shelf
+Succeed task | ['Your task is to: put some creditcard on shelf'] | current RS | 0.35537190082644626 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put some tomato on microwave
+Succeed task | ['Your task is to: put a tomato in microwave'] | current RS | 0.3524590163934426 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put some tomato on microwave
+Succeed task | ['Your task is to: put a tomato in microwave'] | current RS | 0.34959349593495936 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put some glassbottle on countertop
+Succeed task | ['Your task is to: put a glassbottle in countertop'] | current RS | 0.3467741935483871 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put some glassbottle on countertop
+Succeed task | ['Your task is to: put a glassbottle in countertop'] | current RS | 0.344 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put a box in sofa
+Succeed task | ['Your task is to: put a box in sofa'] | current RS | 0.3412698412698413 current eplen | 6.255813953488372
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on cabinet
+Succeed task | ['Your task is to: put some candle on cabinet'] | current RS | 0.3464566929133858 current eplen | 6.7727272727272725
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on cabinet
+Succeed task | ['Your task is to: put a candle in cabinet'] | current RS | 0.34375 current eplen | 6.7727272727272725
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on cabinet
+Succeed task | ['Your task is to: put a candle in cabinet'] | current RS | 0.34108527131782945 current eplen | 6.7727272727272725
+wait 5sec
+Resetting ThorEnv
+Task: put a peppershaker in countertop
+Succeed task | ['Your task is to: put some peppershaker on countertop'] | current RS | 0.3384615384615385 current eplen | 6.7727272727272725
+wait 5sec
+Resetting ThorEnv
+Task: put some peppershaker on countertop
+Succeed task | ['Your task is to: put a peppershaker in countertop'] | current RS | 0.33587786259541985 current eplen | 6.7727272727272725
+wait 5sec
+Resetting ThorEnv
+Task: put some creditcard on desk
+Succeed task | ['Your task is to: put some creditcard on desk'] | current RS | 0.3409090909090909 current eplen | 6.7555555555555555
+wait 5sec
+Resetting ThorEnv
+Task: put some creditcard on desk
+Succeed task | ['Your task is to: put a creditcard in desk'] | current RS | 0.3458646616541353 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some creditcard on sofa
+Succeed task | ['Your task is to: put a creditcard in sofa'] | current RS | 0.34328358208955223 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some creditcard on sofa
+Succeed task | ['Your task is to: put a creditcard in sofa'] | current RS | 0.34074074074074073 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some laptop on desk
+Succeed task | ['Your task is to: put some laptop on desk'] | current RS | 0.3382352941176471 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some laptop on desk
+Succeed task | ['Your task is to: put a laptop in desk'] | current RS | 0.3357664233576642 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some laptop on desk
+Succeed task | ['Your task is to: put some laptop on desk'] | current RS | 0.3333333333333333 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put a pillow in ottoman
+Succeed task | ['Your task is to: put some pillow on ottoman'] | current RS | 0.33093525179856115 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some pillow on ottoman
+Succeed task | ['Your task is to: put some pillow on ottoman'] | current RS | 0.32857142857142857 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some pillow on ottoman
+Succeed task | ['Your task is to: put some pillow on ottoman'] | current RS | 0.3262411347517731 current eplen | 6.695652173913044
+wait 5sec
+Resetting ThorEnv
+Task: put some book on bed
+Succeed task | ['Your task is to: put some book on bed'] | current RS | 0.33098591549295775 current eplen | 7.319148936170213
+wait 5sec
+Resetting ThorEnv
+Task: put some book on bed
+Succeed task | ['Your task is to: put some book on bed'] | current RS | 0.3356643356643357 current eplen | 7.25
+wait 5sec
+Resetting ThorEnv
+Task: put a book in bed
+Succeed task | ['Your task is to: put some book on bed'] | current RS | 0.3402777777777778 current eplen | 7.326530612244898
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on garbagecan
+Succeed task | ['Your task is to: put a soapbottle in garbagecan'] | current RS | 0.33793103448275863 current eplen | 7.326530612244898
+wait 5sec
+Resetting ThorEnv
+Task: put a pencil in desk
+Succeed task | ['Your task is to: put a pencil in desk'] | current RS | 0.3424657534246575 current eplen | 7.32
+wait 5sec
+Resetting ThorEnv
+Task: put some pencil on desk
+Succeed task | ['Your task is to: put a pencil in desk'] | current RS | 0.3469387755102041 current eplen | 7.254901960784314
+wait 5sec
+Resetting ThorEnv
+Task: put some cellphone on bed
+Succeed task | ['Your task is to: put a cellphone in bed'] | current RS | 0.34459459459459457 current eplen | 7.254901960784314
+wait 5sec
+Resetting ThorEnv
+Task: put some cellphone on bed
+Succeed task | ['Your task is to: put a cellphone in bed'] | current RS | 0.3422818791946309 current eplen | 7.254901960784314
+wait 5sec
+Resetting ThorEnv
+Task: put some cellphone on bed
+Succeed task | ['Your task is to: put some cellphone on bed'] | current RS | 0.34 current eplen | 7.254901960784314
+wait 5sec
+Resetting ThorEnv
+Task: put some cellphone on diningtable
+Succeed task | ['Your task is to: put some cellphone on diningtable'] | current RS | 0.3443708609271523 current eplen | 7.1923076923076925
+wait 5sec
+Resetting ThorEnv
+Task: put a cellphone in diningtable
+Succeed task | ['Your task is to: put a cellphone in diningtable'] | current RS | 0.34868421052631576 current eplen | 7.132075471698113
+wait 5sec
+Resetting ThorEnv
+Task: put a soapbottle in toilet
+Succeed task | ['Your task is to: put a soapbottle in toilet'] | current RS | 0.35294117647058826 current eplen | 7.092592592592593
+wait 5sec
+Resetting ThorEnv
+Task: put some soapbottle on toilet
+Succeed task | ['Your task is to: put some soapbottle on toilet'] | current RS | 0.35714285714285715 current eplen | 7.036363636363636
+wait 5sec
+Resetting ThorEnv
+Task: put a soapbottle in toilet
+Succeed task | ['Your task is to: put a soapbottle in toilet'] | current RS | 0.36129032258064514 current eplen | 7.339285714285714
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on toilet
+Succeed task | ['Your task is to: put some candle on toilet'] | current RS | 0.36538461538461536 current eplen | 7.280701754385965
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on toilet
+Succeed task | ['Your task is to: put a candle in toilet'] | current RS | 0.36942675159235666 current eplen | 7.224137931034483
+wait 5sec
+Resetting ThorEnv
+Task: put a knife in sidetable
+Succeed task | ['Your task is to: put a knife in sidetable'] | current RS | 0.3670886075949367 current eplen | 7.224137931034483
+wait 5sec
+Resetting ThorEnv
+Task: put some pencil on sidetable
+Succeed task | ['Your task is to: put some pencil on sidetable'] | current RS | 0.3710691823899371 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a pencil in sidetable
+Succeed task | ['Your task is to: put a pencil in sidetable'] | current RS | 0.36875 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a pencil in sidetable
+Succeed task | ['Your task is to: put some pencil on sidetable'] | current RS | 0.36645962732919257 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in countertop
+Succeed task | ['Your task is to: put some handtowel on countertop'] | current RS | 0.36419753086419754 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in countertop
+Succeed task | ['Your task is to: put a handtowel in countertop'] | current RS | 0.3619631901840491 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a handtowel in countertop
+Succeed task | ['Your task is to: put some handtowel on countertop'] | current RS | 0.3597560975609756 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a toiletpaper in toiletpaperhanger
+Succeed task | ['Your task is to: put a toiletpaper in toiletpaperhanger'] | current RS | 0.3575757575757576 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put some toiletpaper on toiletpaperhanger
+Succeed task | ['Your task is to: put a toiletpaper in toiletpaperhanger'] | current RS | 0.35542168674698793 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put some bread on microwave
+Succeed task | ['Your task is to: put some bread on microwave'] | current RS | 0.3532934131736527 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a bread in microwave
+Succeed task | ['Your task is to: put some bread on microwave'] | current RS | 0.35119047619047616 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put some bread on microwave
+Succeed task | ['Your task is to: put some bread on microwave'] | current RS | 0.34911242603550297 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a cd in shelf
+Succeed task | ['Your task is to: put a cd in shelf'] | current RS | 0.34705882352941175 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a cd in shelf
+Succeed task | ['Your task is to: put a cd in shelf'] | current RS | 0.34502923976608185 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a cd in shelf
+Succeed task | ['Your task is to: put a cd in shelf'] | current RS | 0.3430232558139535 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a book in sofa
+Succeed task | ['Your task is to: put some book on sofa'] | current RS | 0.34104046242774566 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put a book in sofa
+Succeed task | ['Your task is to: put some book on sofa'] | current RS | 0.3390804597701149 current eplen | 7.1525423728813555
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on shelf
+Succeed task | ['Your task is to: put a keychain in shelf'] | current RS | 0.34285714285714286 current eplen | 7.083333333333333
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on shelf
+Succeed task | ['Your task is to: put some keychain on shelf'] | current RS | 0.3465909090909091 current eplen | 7.032786885245901
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on shelf
+Succeed task | ['Your task is to: put a keychain in shelf'] | current RS | 0.3502824858757062 current eplen | 6.967741935483871
+wait 5sec
+Resetting ThorEnv
+Task: put a keychain in dresser
+Succeed task | ['Your task is to: put some keychain on dresser'] | current RS | 0.34831460674157305 current eplen | 6.967741935483871
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on dresser
+Succeed task | ['Your task is to: put a keychain in dresser'] | current RS | 0.3463687150837989 current eplen | 6.967741935483871
+wait 5sec
+Resetting ThorEnv
+Task: put some keychain on dresser
+Succeed task | ['Your task is to: put some keychain on dresser'] | current RS | 0.35 current eplen | 7.380952380952381
+wait 5sec
+Resetting ThorEnv
+Task: put a statue in sidetable
+Succeed task | ['Your task is to: put a statue in sidetable'] | current RS | 0.34806629834254144 current eplen | 7.380952380952381
+wait 5sec
+Resetting ThorEnv
+Task: put some statue on sidetable
+Succeed task | ['Your task is to: put some statue on sidetable'] | current RS | 0.34615384615384615 current eplen | 7.380952380952381
+wait 5sec
+Resetting ThorEnv
+Task: put a statue in sidetable
+Succeed task | ['Your task is to: put a statue in sidetable'] | current RS | 0.3442622950819672 current eplen | 7.380952380952381
+wait 5sec
+Resetting ThorEnv
+Task: put a cellphone in desk
+Succeed task | ['Your task is to: put some cellphone on desk'] | current RS | 0.3423913043478261 current eplen | 7.380952380952381
+wait 5sec
+Resetting ThorEnv
+Task: put some cellphone on desk
+Succeed task | ['Your task is to: put a cellphone in desk'] | current RS | 0.34594594594594597 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a cellphone in desk
+Succeed task | ['Your task is to: put a cellphone in desk'] | current RS | 0.34408602150537637 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put some alarmclock on desk'] | current RS | 0.3422459893048128 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put a alarmclock in desk'] | current RS | 0.3404255319148936 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Succeed task | ['Your task is to: put some alarmclock on desk'] | current RS | 0.3386243386243386 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a watch in coffeetable
+Succeed task | ['Your task is to: put some watch on coffeetable'] | current RS | 0.3368421052631579 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put a remotecontrol in dresser
+Succeed task | ['Your task is to: put a remotecontrol in dresser'] | current RS | 0.33507853403141363 current eplen | 7.328125
+wait 5sec
+Resetting ThorEnv
+Task: put some remotecontrol on dresser
+Succeed task | ['Your task is to: put some remotecontrol on dresser'] | current RS | 0.3385416666666667 current eplen | 7.338461538461538
+wait 5sec
+Resetting ThorEnv
+Task: put some remotecontrol on dresser
+Succeed task | ['Your task is to: put a remotecontrol in dresser'] | current RS | 0.33678756476683935 current eplen | 7.338461538461538
+wait 5sec
+Resetting ThorEnv
+Task: put some toiletpaper on toilet
+Succeed task | ['Your task is to: put some toiletpaper on toilet'] | current RS | 0.3402061855670103 current eplen | 7.242424242424242
+wait 5sec
+Resetting ThorEnv
+Task: put some toiletpaper on toilet
+Succeed task | ['Your task is to: put some toiletpaper on toilet'] | current RS | 0.3435897435897436 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some toiletpaper on toilet
+Succeed task | ['Your task is to: put a toiletpaper in toilet'] | current RS | 0.34183673469387754 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on toilet
+Succeed task | ['Your task is to: put a candle in toilet'] | current RS | 0.3401015228426396 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on toilet
+Succeed task | ['Your task is to: put a candle in toilet'] | current RS | 0.3383838383838384 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on toilet
+Succeed task | ['Your task is to: put some candle on toilet'] | current RS | 0.33668341708542715 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some peppershaker on sidetable
+Succeed task | ['Your task is to: put some peppershaker on sidetable'] | current RS | 0.335 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put a peppershaker in sidetable
+Succeed task | ['Your task is to: put a peppershaker in sidetable'] | current RS | 0.3333333333333333 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on drawer
+Succeed task | ['Your task is to: put a candle in drawer'] | current RS | 0.3316831683168317 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on drawer
+Succeed task | ['Your task is to: put a candle in drawer'] | current RS | 0.33004926108374383 current eplen | 7.298507462686567
+wait 5sec
+Resetting ThorEnv
+Task: put some candle on drawer
+Succeed task | ['Your task is to: put a candle in drawer'] | current RS | 0.3333333333333333 current eplen | 7.25
+wait 5sec
+Resetting ThorEnv
+Task: put some egg on microwave
+Succeed task | ['Your task is to: put a egg in microwave'] | current RS | 0.33170731707317075 current eplen | 7.25
+wait 5sec
+Resetting ThorEnv
+Task: put some egg on microwave

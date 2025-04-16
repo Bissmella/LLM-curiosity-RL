@@ -27,7 +27,6 @@ class ObjectExtractor:
             import spacy
             self.nlp = spacy.load("en_core_web_sm")
         else:
-            #login("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")
             model_id = "meta-llama/Llama-3.2-1B-Instruct"
             self.ner = pipeline(
                 "text-generation",

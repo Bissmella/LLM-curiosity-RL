@@ -7,13 +7,13 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B" \
     lamorel_args.llm_args.model_type="causal" \
     rl_script_args.seed=3 \
-    rl_script_args.number_envs=1 \
+    rl_script_args.number_envs=2 \
     rl_script_args.task=[1] \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run=Examine_in_light \
     lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \
     wandb_args.mode="offline" \
-    lamorel_args.distributed_setup_args.n_llm_processes=1 \
+    lamorel_args.distributed_setup_args.n_llm_processes=2 \
     rl_script_args.transitions_buffer_len=5 \
     rl_script_args.epochs=500 \
     rl_script_args.gradient_batch_size=2 \

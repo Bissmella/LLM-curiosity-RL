@@ -57,6 +57,8 @@ import yaml
 
 from object_extractor import ObjectExtractor
 
+import torch.distributed as dist
+
 #TODO   SENSITIVE HERE!!!!!!11
 from huggingface_hub import login
 login("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")
@@ -377,7 +379,6 @@ def main(config_args):
     
     #output analysis
     all_analysis = []
-
     for i in tqdm(range(max_episods), desc="Evaluation"):
         promptsave=[]
         imagessave=[]
@@ -528,10 +529,10 @@ def main(config_args):
 
 
         success += list(s)
-        if s==1:
+        if s.all()==1:  #in multi environment, now only adding to eplen if all of the environments were successfull.
             eplen.append(epit)
-        for d in range(config_args.rl_script_args.number_envs):
-            traj[d]['success'] = s.item()
+        for _i in range(config_args.rl_script_args.number_envs):
+            traj[_i]['success'] = s[_i]
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         all_analysis.extend(traj)
         print("wait 5sec")

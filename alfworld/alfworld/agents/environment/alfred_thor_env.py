@@ -306,7 +306,7 @@ class AlfredThorEnv(object):
             else:
                 raise NotImplementedError
             self._done = won or self.steps > max_nb_steps_per_episode
-            object_info = [object_info]
+            #object_info = object_info
             return (
                 self._feedback,
                 self._done,
@@ -468,7 +468,8 @@ class AlfredThorEnv(object):
         return obs, None, dones, infos
 
     def wait_and_get_info(self):
-        obs, dones, admissible_commands, wons, gamefiles, expert_plans, gc_srs = (
+        obs, dones, admissible_commands, wons, gamefiles, expert_plans, gc_srs, object_infos = (
+            [],
             [],
             [],
             [],
@@ -489,6 +490,7 @@ class AlfredThorEnv(object):
             gc_srs.append(gc_sr)
             gamefiles.append(self.envs[n].traj_root)
             expert_plans.append(expert_actions)
+            object_infos.append(object_info)
 
         infos = {
             "admissible_commands": admissible_commands,
@@ -496,7 +498,7 @@ class AlfredThorEnv(object):
             "goal_condition_success_rate": gc_srs,
             "extra.gamefile": gamefiles,
             "extra.expert_plan": expert_plans,
-            "extra.object_info": object_info,
+            "extra.object_info": object_infos,
         }
         return obs, dones, infos
 

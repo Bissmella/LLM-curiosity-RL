@@ -4,3 +4,4 @@ data/
 videos/
 outputs/
 weights/
+/pick_train_analysis*
