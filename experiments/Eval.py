@@ -274,11 +274,10 @@ prompt_generator = [Glam_prompt_test2, prompt_maker, swap_prompt, xml_prompt, pa
 lamorel_init()
 
 
-obj_extractor = ObjectExtractor(use_spacy=False)
+#obj_extractor = ObjectExtractor(use_spacy=False)
 
 @hydra.main(config_path="config", config_name="config")
 def main(config_args):
-    
     # Random seed
     seed = config_args.rl_script_args.seed
     torch.manual_seed(seed)
@@ -377,6 +376,7 @@ def main(config_args):
     generate_prompt = prompt_generator[config_args.rl_script_args.prompt_id]
     jump=config_args.rl_script_args.number_envs
     
+    obj_extractor = ObjectExtractor(use_spacy=False)
     #output analysis
     all_analysis = []
     for i in tqdm(range(max_episods), desc="Evaluation"):

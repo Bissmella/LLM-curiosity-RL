@@ -34,7 +34,7 @@ class ObjectExtractor:
                 torch_dtype=torch.bfloat16,
                 device_map="auto",
             )
-            
+            print("in object extractor ************ #######")
         # Download required NLTK data
         try:
             nltk.data.find('corpora/wordnet')
