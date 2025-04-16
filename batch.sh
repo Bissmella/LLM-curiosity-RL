@@ -7,8 +7,8 @@
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 nvidia-smi -L
-
-sleep 100
+source /usr/local/miniconda/etc/profile.d/conda.sh
 cd /home/bahaduri/VIPER
+
 conda activate viper2
 bash eval.sh

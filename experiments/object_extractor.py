@@ -429,7 +429,7 @@ class ObjectExtractor:
         source_objects = list(set(source_objects))
         vlm_objects = list(set(vlm_objects))
         if len(source_objects) == 0:
-            return 1, []
+            return None, []
         elif len(source_objects)> 0 and len(vlm_objects) == 0:
             return 0, []
         source_embs = self.sim_model.encode(source_objects, convert_to_tensor=True, show_progress_bar=False)

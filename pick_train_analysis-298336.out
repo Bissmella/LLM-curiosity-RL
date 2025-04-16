@@ -1,0 +1,15 @@
+GPU 0: NVIDIA TITAN RTX (UUID: GPU-fd632b7c-4e8b-5135-cff0-371bc928c259)
+GPU 1: NVIDIA TITAN RTX (UUID: GPU-415d7f7a-c39f-4241-9473-218c49fa5589)
+no change     /usr/local/miniconda/condabin/conda
+no change     /usr/local/miniconda/bin/conda
+no change     /usr/local/miniconda/bin/conda-env
+no change     /usr/local/miniconda/bin/activate
+no change     /usr/local/miniconda/bin/deactivate
+no change     /usr/local/miniconda/etc/profile.d/conda.sh
+no change     /usr/local/miniconda/etc/fish/conf.d/conda.fish
+no change     /usr/local/miniconda/shell/condabin/Conda.psm1
+no change     /usr/local/miniconda/shell/condabin/conda-hook.ps1
+no change     /usr/local/miniconda/lib/python3.10/site-packages/xontrib/conda.xsh
+no change     /usr/local/miniconda/etc/profile.d/conda.csh
+no change     /home/bahaduri/.bashrc
+No action taken.
