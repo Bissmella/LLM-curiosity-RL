@@ -417,9 +417,9 @@ def main(config_args):
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
             for i in range(config_args.rl_script_args.number_envs):
                     try:
-                        infos["description"].append( [description[i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text']
+                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
                     except:
-                        infos["description"].append( [description[i].split("Assistant:")[-1]])
+                        infos["description"].append([description[i].split("Assistant:")[-1]])  # ['This is an animated image containing some objects.'])#
                 
             _goal = infos["goal"]
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
@@ -515,9 +515,9 @@ def main(config_args):
                 infos["description"]=[]
                 for _i in range(config_args.rl_script_args.number_envs):
                     try:
-                        infos["description"].append([description[_i].split("Assistant:")[-1]])
+                        infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
                     except:
-                        infos["description"].append( [description[i]['text'].split("Assistant:")[-1]])
+                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) # ['This is an animated image containing some objects.'])#
                 infos["goal"]=_goal
                 #print(r,d,infos["won"])
             # obss,infos=get_infos(infos,config_args.rl_script_args.number_envs)
@@ -532,11 +532,11 @@ def main(config_args):
         if s.all()==1:  #in multi environment, now only adding to eplen if all of the environments were successfull.
             eplen.append(epit)
         for _i in range(config_args.rl_script_args.number_envs):
-            traj[_i]['success'] = s[_i]
+            traj[_i]['success'] = s[_i].item()
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         all_analysis.extend(traj)
         print("wait 5sec")
-        p=f"/home/bahaduri/VIPER/outputs/success_train_txt/{_goal[0]}{int(np.mean(success)*100)}"
+        p=f"/home/bahaduri/VIPER/outputs/success_train_txt_single/{_goal[0]}{int(np.mean(success)*100)}"
         if not os.path.exists(p):
             os.mkdir(p)
             file=open(f"{p}/text.txt","w")
@@ -548,6 +548,7 @@ def main(config_args):
             
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
+        
     with open("/home/bahaduri/VIPER/outputs/trajectories_train.json", "w") as f:
         json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")

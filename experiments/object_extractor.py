@@ -423,7 +423,7 @@ class ObjectExtractor:
         overlap_score = total_score / len(source_objects)
         return overlap_score, matches
     
-    def calculate_overlap_score_transformer(self, source_objects, vlm_objects, threshold=0.7):
+    def calculate_overlap_score_transformer(self, source_objects, vlm_objects, threshold=0.4):
         # Encode both lists in batch
         source_objects = list(set(source_objects))
         vlm_objects = list(set(vlm_objects))
@@ -446,7 +446,7 @@ class ObjectExtractor:
             best_score = scores[best_idx].item()
             if best_score >= threshold:
                 matches[source_obj] = vlm_objects[best_idx]
-                total_score += 1
+                total_score += best_score
 
         overlap_score = total_score / len(source_objects)
         return overlap_score, list(matches.keys())
