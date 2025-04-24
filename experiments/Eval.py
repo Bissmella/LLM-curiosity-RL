@@ -489,7 +489,9 @@ def main(config_args):
                         'vis_obj': visible_obj[_i],
                         'main_obj': main_entities[_i],
                         'vlm_obj': entities[_i],
-                        'matching_score': matching_score[_i]
+                        'matching_score': matching_score[_i],
+                        'possible_actions': possible_actions[_i],
+                        'selected_action' : possible_actions[_i][int(actions_id[_i])]
                     }
                 )
             # print(transitions_buffer)
@@ -536,7 +538,7 @@ def main(config_args):
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         all_analysis.extend(traj)
         print("wait 5sec")
-        p=f"/home/bahaduri/VIPER/outputs/success_train_txt_single/{_goal[0]}{int(np.mean(success)*100)}"
+        p=f"/home/bahaduri/VIPER/outputs/success_eval/{_goal[0]}{int(np.mean(success)*100)}"
         if not os.path.exists(p):
             os.mkdir(p)
             file=open(f"{p}/text.txt","w")
@@ -549,7 +551,7 @@ def main(config_args):
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
         
-    with open("/home/bahaduri/VIPER/outputs/trajectories_train.json", "w") as f:
+    with open("/home/bahaduri/VIPER/outputs/trajectories_eval.json", "w") as f:
         json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
     lm_server.close()        
