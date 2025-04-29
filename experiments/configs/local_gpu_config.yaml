@@ -30,7 +30,7 @@ lamorel_args:
 rl_script_args:
   path: null
   seed: 1
-  train_eval: "valid_train"  #valid_train  or train
+  train_eval: "train"  #valid_train  or train
   # ppo
   ppo_epochs: 4
   lam: 0.99
@@ -61,10 +61,10 @@ rl_script_args:
   startepochs: 0
   prompt_id: 0
   prompt_element: ['past action','obs']
-  steps_per_epoch: 1000
+  steps_per_epoch: 400
   save_freq: 1
   output_dir: null
-  loading_path: "/home/bahaduri/VIPER/weights"
+  loading_path: #"/home/bahaduri/VIPER/weights"
   vlm_loading_path: #/lustre/fswork/projects/rech/lrp/ufn64rt/project/vlm
   transitions_buffer_len: 2
   # environment

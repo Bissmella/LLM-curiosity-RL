@@ -1,10 +1,10 @@
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Eval.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Eval_llmOnly.py" \
     rl_script_args.output_dir=.  \
     lamorel_args.accelerate_args.machine_rank=0 \
-    lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
+    lamorel_args.llm_args.model_path="mistralai/Mistral-7B-Instruct-v0.3" \
     lamorel_args.llm_args.model_type="causal" \
     rl_script_args.seed=3 \
     rl_script_args.number_envs=1 \

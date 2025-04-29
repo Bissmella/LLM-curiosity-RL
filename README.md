@@ -106,3 +106,7 @@ numpy 2.02 --> 1.26 for spacy
 
 ## important to note:
 eval only works for 1 environment.
+
+#LLM models:
+mistralai/Mistral-7B-Instruct-v0.3
+"meta-llama/Llama-3.2-1B-Instruct"

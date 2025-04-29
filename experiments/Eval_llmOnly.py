@@ -8,25 +8,20 @@ import os
 # Add the root directory (one level up from current file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
-#TODO   SENSITIVE HERE!!!!!!11
-from huggingface_hub import login
-login("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")
-
-
+import json
 from collections import OrderedDict
 from typing import List
 from torch.nn.functional import log_softmax
 import hydra
+import cv2 as cv
+from PIL import Image
 from utils import *
 import torch
 import bitsandbytes
 import numpy as np
 import logging
-import cv2 
-from PIL import Image
-import cv2 as cv
 import re
+import cv2 
 from transformers import set_seed
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 import glob
@@ -46,7 +41,7 @@ from textworld import EnvInfos
 from lamorel import Caller, lamorel_init
 from lamorel import BaseUpdater, BaseModuleFunction, BaseModelInitializer
 from random import sample
-import wandb
+#import wandb
 from accelerate import Accelerator
 import warnings
 from pyvirtualdisplay import Display
@@ -61,6 +56,13 @@ import alfworld.agents.modules.generic as generic
 import yaml
 
 from object_extractor import ObjectExtractor
+
+import torch.distributed as dist
+
+#TODO   SENSITIVE HERE!!!!!!11
+from huggingface_hub import login
+login("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")
+
 
 class PPOUpdater(BaseUpdater):
     def __init__(
@@ -268,14 +270,14 @@ def reset_history():
     
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 accelerator = Accelerator()
-prompt_generator = [prompt_maker,prompt_maker,Glam_prompt, swap_prompt, xml_prompt, paraphrase_prompt]
+prompt_generator = [Glam_prompt_test2, prompt_maker, swap_prompt, xml_prompt, paraphrase_prompt]
 lamorel_init()
 
 
+#obj_extractor = ObjectExtractor(use_spacy=False)
 
 @hydra.main(config_path="config", config_name="config")
 def main(config_args):
-    
     # Random seed
     seed = config_args.rl_script_args.seed
     torch.manual_seed(seed)
@@ -322,16 +324,25 @@ def main(config_args):
             ),
         },
     )
-    print("here!")
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()
     config = load_config(config_args.lamorel_args.config_alfred)
-    config["env"]["task_types"]=config_args.rl_script_args.task
-    env = getattr(environment, config_args.rl_script_args.name_environment)(config)
-    train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
+    config["env"]["task_types"]=config_args.rl_script_args.task  #Previous bugged
+    
+    if config_args.rl_script_args.name_environment=='AlfredTWEnv':
+        env = getattr(environment, config_args.rl_script_args.name_environment)(config,config_args.rl_script_args.train_eval)
+        files=env.game_files.copy()
+        max_episods = min(2000, int(len(files) / config_args.rl_script_args.number_envs))
+        
+    else:
+        env = getattr(environment, config_args.rl_script_args.name_environment)(config,config_args.rl_script_args.train_eval)
+        max_episods = min(2000, int(len(env.json_file_list) / config_args.rl_script_args.number_envs))
+        train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
     # init wandb
-    wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
+    success=[]
+    eplen=[]
+    #wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
     # Set up experience buffer
     buffers = [
         PPOBuffer(
@@ -344,46 +355,16 @@ def main(config_args):
     ]
 
     # Prepare for interaction with environment
-    (o, infos), ep_ret, ep_len = (
-        train_env.reset(),
-        [0 for _ in range(config_args.rl_script_args.number_envs)],
-        [0 for _ in range(config_args.rl_script_args.number_envs)],
-    )
-    past_actions=["" for _ in range(config_args.rl_script_args.number_envs)]
-    if config_args.rl_script_args.name_environment=='AlfredTWEnv':
-        #we dont use vlm
+  #  (o, infos), ep_ret, ep_len = (
+  #      train_env.reset(),
+  #      [0 for _ in range(config_args.rl_script_args.number_envs)],
+  #      [0 for _ in range(config_args.rl_script_args.number_envs)],
+  #  )
+
     
-                infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
-                infos["context"] = [o[__i].split("\n\n")[0:-1] for __i in range(len(o))]
-                infos["description"] = [o[__i].split("\n\n")[0:] for __i in range(len(o))]
-                
-                _goal = infos["goal"]
-                _description = infos["description"]
-                #_context=infos["context"] 
-    else:
-        #we use VLM
-                frames = train_env.get_frames()
-                #_frames = []
-                description=[]
-                vlm_prompt=[]
-                _frames=[]
-                for _i in range(frames.shape[0]):
-                    _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
-                    vlm_prompt.append(f"<DETAILED_CAPTION>")
-                description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
-                infos["description"]=[]
-                infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
-                for i in range(config_args.rl_script_args.number_envs):
-                    try:
-                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]])
-                    except:
-                        infos["description"].append( [description[i].split("Assistant:")[-1]])
-                
-                _goal = infos["goal"]
-    o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
     not_saved = [True for _ in range(config_args.rl_script_args.number_envs)]
     history = reset_history()
-    history["goal"].extend([_i["goal"] for _i in infos])
+    
 
     transitions_buffer = [[] for _ in range(config_args.rl_script_args.number_envs)]
     not_saved = [True for _ in range(config_args.rl_script_args.number_envs)]
@@ -393,22 +374,76 @@ def main(config_args):
         + str(config_args.rl_script_args.prompt_id)
     )
     generate_prompt = prompt_generator[config_args.rl_script_args.prompt_id]
-    for epoch in tqdm(range(config_args.rl_script_args.startepochs,config_args.rl_script_args.epochs)):
-        __time = time.time()
-        for t in tqdm(
-            range(
-                config_args.rl_script_args.steps_per_epoch
-                // config_args.rl_script_args.number_envs
-            ),
-            ascii=" " * 9 + ">",
-            ncols=100,
-        ):
+    jump=config_args.rl_script_args.number_envs
+    
+    obj_extractor = ObjectExtractor(use_spacy=False)
+    #output analysis
+    all_analysis = []
+    for i in tqdm(range(max_episods), desc="Evaluation"):
+        promptsave=[]
+        imagessave=[]
+        
+        traj = [{} for _ in range(config_args.rl_script_args.number_envs)] # trajectory full info for analysis
+        if config_args.rl_script_args.name_environment=='AlfredTWEnv':
+            train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs,game_files=files[i*jump:(i+1)*jump])
+            (o, infos), ep_ret, ep_len = ( train_env.reset(),[0 for _ in range(config_args.rl_script_args.number_envs)],[0 for _ in range(config_args.rl_script_args.number_envs)],)
+            
+            infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
+            #infos["context"] = [o[__i].split("\n\n")[0:-1] for __i in range(len(o))]
+            infos["description"] = [o[__i].split("\n\n")[0:] for __i in range(len(o))]
+            
+            #for __i in range(len(infos["description"])):
+            #        infos["description"][__i].append("")
+            _goal = infos["goal"]
+            _description = infos["description"]
+            #_context=infos["context"]
+            past_actions=["" for _ in range(config_args.rl_script_args.number_envs)]
+            o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
+        else:
+            o, infos = train_env.reset(json_file_id=i * config_args.rl_script_args.number_envs)
+            #TODO following does not work for more than 1 environments.
+            env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)]  #includes object info regarding objects in the env such as visible objects
+            gt_obs = [o[__i].split("\n\n")[1] for __i in range(len(o))]  #ground truth observation on reset  for analysis
+            past_actions=["" for _ in range(config_args.rl_script_args.number_envs)]
+            frames = train_env.get_frames()
+            _frames = []
+            vlm_prompt=[]
+            for _i in range(frames.shape[0]):
+                    _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
+                    #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
+                    vlm_prompt.append(f"<DETAILED_CAPTION>")
+            #description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
+            infos["description"]=[]
+            infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
+            for i in range(config_args.rl_script_args.number_envs):
+                    infos["description"].append(["This is an animated image. In this image we can see some objects. In the background there is wall."])
+                    # try:
+                    #     infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
+                    # except:
+                    #     infos["description"].append([description[i].split("Assistant:")[-1]])  # ['This is an animated image containing some objects.'])#
+                
+            _goal = infos["goal"]
+            o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
+        d = [False for _ in range(config_args.rl_script_args.number_envs)]
+        transitions_buffer = [[] for _ in range(config_args.rl_script_args.number_envs)]
+        epit=0
+
+        #for analysis data
+        for _i in range(config_args.rl_script_args.number_envs):
+            traj[_i]['task'] = infos[_i]['goal']
+            traj[_i]['steps'] = []
+            traj[_i]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[_i]['goal'])
+        while not torch.all(torch.tensor(d)):
             # generate_prompt=sample(prompt_generator,1)[0]
             
-            possible_actions = [_i["possible_actions"] for _i in infos]
-            prompts = [
-                prompt_maker({"info":_i,"transition_buffer":_o},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)
+            epit+=1
+            possible_actions = [list(filter(lambda x: x not in ["look","inventory"]  , _i["possible_actions"])) for _i in infos]
+            
+            prompts = [               prompt_maker({"info":_i,"transition_buffer":_o},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)
             ]
+            promptsave.append(prompts[0])
+            imagessave.append(cv2.cvtColor(train_env.get_frames()[0,:,:,:], cv2.COLOR_BGR2RGB))
+
             
             
             output = lm_server.custom_module_fns(
@@ -418,282 +453,113 @@ def main(config_args):
 
             proba_dist = torch.distributions.Categorical(logits=scores)
             values = scores_stacking([_o["value"][0] for _o in output])
-            sampled_actions = proba_dist.sample()
+            sampled_actions = torch.argmax(proba_dist.probs,dim=-1)
             log_probs = proba_dist.log_prob(sampled_actions)
             actions_id = sampled_actions.cpu().numpy()
             actions_command = []
+            #print(proba_dist.probs)
+            #print(sampled_actions)
+            #print(actions_id)
             for j in range(len(actions_id)):
                 command = possible_actions[j][int(actions_id[j])]
-                past_actions[j]=command
                 actions_command.append(command)
+                past_actions[j]=command
                 transitions_buffer[j].append({"obs": infos[j]["obs"].copy(), "act": command})
                 transitions_buffer[j] = transitions_buffer[j][
                     -config_args.rl_script_args.transitions_buffer_len :
                 ]
+
+
+            #do anlysis and store the analysis
+            entities = []
+            main_entities = []
+            visible_obj = []
+            matching_score = []
+            for _i in range(config_args.rl_script_args.number_envs):
+                entities.append(obj_extractor.extract_objects_from_text(infos[_i]['obs'][0]))  #objects mentioned in the vlm description
+                visible_obj.append([vis_obj['objectType'] for vis_obj in env_object_info[_i]['visible_objects']]) #visible objects
+                obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])
+                #main_entities.append(list(set(visible_obj[d]) & set(traj[d]['goal_entities'])))  #intersection of the goal entities and entities (vlm entities)
+                matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])[1]  #intersection of the goal entities and entities (vlm entities)
+                main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
+                matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[_i], entities[_i])[0])
+                traj[_i]['steps'].append(
+                    {
+                        'vlm_desc': infos[_i]['obs'][0],
+                        'text_desc': gt_obs[_i],
+                        'vis_obj': visible_obj[_i],
+                        'main_obj': main_entities[_i],
+                        'vlm_obj': entities[_i],
+                        'matching_score': matching_score[_i],
+                        'possible_actions': possible_actions[_i],
+                        'selected_action' : possible_actions[_i][int(actions_id[_i])]
+                    }
+                )
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
-            
+            gt_obs = [o[_i] for i in range(len(o))]  #ground truth textual observations for analysis
+            env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)] #ground truth objects info for analysis
+            #print(r,d)
             if config_args.rl_script_args.name_environment=='AlfredTWEnv':  
                 infos["goal"] = _goal
-                infos["description"] = [o[__i].split("\n\n")[0:] for __i in range(len(o))]
-                #o[__i].split("\n\n")[0:-1] for __i in range(len(o))
+                #infos["description"] = _description
                 #infos["context"]=_context
-                for i in range(config_args.rl_script_args.number_envs):
-                    infos["description"][i][-1] = o[i]
+                infos["description"]=[o[__i].split("\n\n")[0:] for __i in range(len(o))]
             else:
                 frames = train_env.get_frames()
-                
                 _frames = []
                 vlm_prompt=[]
                 for _i in range(frames.shape[0]):
-                        _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
-                        vlm_prompt.append(f"<DETAILED_CAPTION>")
-                    #<DETAILED_CAPTION>
-
+                    _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
+                    #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
+                    #vlm_prompt.append(f"describe in details the image and all objects present on it<image><end_of_utterance>\nAssistant:")
+                    vlm_prompt.append(f"<DETAILED_CAPTION>")
+                #description = 'something'#lm_server.generate(contexts=_frames,prompts=vlm_prompt)
                 infos["description"]=[]
-                for i in range(config_args.rl_script_args.number_envs):
-                    try:
-                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]])
-                    except:
-                        infos["description"].append( [description[i].split("Assistant:")[-1]])
+                for _i in range(config_args.rl_script_args.number_envs):
+                    infos["description"].append(["This is an animated image. In this image we can see some objects. In the background there is wall."])
+                    # try:
+                    #     infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
+                    # except:
+                    #     infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) # ['This is an animated image containing some objects.'])#
                 infos["goal"]=_goal
+                #print(r,d,infos["won"])
             # obss,infos=get_infos(infos,config_args.rl_script_args.number_envs)
             s = infos["won"] * 1
+            
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)
-            epoch_ended = (
-                (t + 1) * config_args.rl_script_args.number_envs
-                == config_args.rl_script_args.steps_per_epoch
-            )
-            bootstrap_dict = {"ids": [], "contexts": []}
+
             s = np.multiply(s, 1)
-            for i in range(config_args.rl_script_args.number_envs):
-                buffers[i].store(
-                    prompts[i],
-                    possible_actions[i],
-                    actions_id[i],
-                    s[i],
-                    values[i],
-                    log_probs[i],
-                )
-                ep_ret[i] += s[i]
 
-                ep_len[i] += 1
-                timeout = ep_len[i] == config_args.rl_script_args.max_ep_len
-                terminal = d[i] or timeout
-                if terminal or epoch_ended:
-                    if not terminal:
-                        bootstrap_dict["ids"].append(i)
-                        bootstrap_dict["contexts"].append(
-                            prompt_maker({"info":infos[i],"transition_buffer":transitions_buffer[i]},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len)
-                            
-                        )
-                    else:
-                        if not_saved[i]:
-                            wandb.log({"succes rate": ep_ret[i]})
-                            history["ep_len"].append(ep_len[i])
-                            history["ep_ret"].append(ep_ret[i])
-                            history["goal"].append(infos[i]["goal"])
-                            not_saved[i] = False
-                        buffers[i].finish_path(0)
 
-                        # history["ep_len"].append(ep_len[i])
-                        # history["ep_ret"].append(ep_ret[i])
-                        ep_len[i], ep_ret[i] = 0, 0
-                        transitions_buffer[i] = []
-                        # history["goal"].append(infos[i]["goal"])
+        success += list(s)
+        if s.all()==1:  #in multi environment, now only adding to eplen if all of the environments were successfull.
+            eplen.append(epit)
+        for _i in range(config_args.rl_script_args.number_envs):
+            traj[_i]['success'] = s[_i].item()
+        print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
+        all_analysis.extend(traj)
+        print("wait 5sec")
+        p=f"/home/bahaduri/VIPER/outputs/success_train_llmonly/{_goal[0]}{int(np.mean(success)*100)}"
+        if not os.path.exists(p):
+            os.mkdir(p)
+            file=open(f"{p}/text.txt","w")
+            for idx in range(len(promptsave)):
+            #promptsave.append(prompts[0])
+                file.write(promptsave[idx]+"\n")
+                result = Image.fromarray(imagessave[idx])
+                result.save(f'{p}/{idx}.png')
             
-            for env_id in range(len(d)):
-              if d[env_id]:
-                o, infos = train_env.reset(env_id=env_id)
-                not_saved = [
-                    True for _ in range(config_args.rl_script_args.number_envs)
-                ]
-                past_actions=["" for _ in range(config_args.rl_script_args.number_envs)]
-                if config_args.rl_script_args.name_environment=='AlfredTWEnv':
-                    #we dont use vlm
-                    infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
-                    #infos["context"] = [o[__i].split("\n\n")[0:-1] for __i in range(len(o))]
-                    infos["description"] = [o[__i].split("\n\n")[0:] for __i in range(len(o))]
-                    #for __i in range(len(infos["description"])):
-                    #    infos["description"][__i].append("")
-                    _goal = infos["goal"]
-                    _description = infos["description"]
-                    #_context=infos["context"]
-                else:
-                    frames = train_env.get_frames()
-                    _frames = []
-                    vlm_prompt=[]
-                    for _i in range(frames.shape[0]):
-                        _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
-                        vlm_prompt.append(f"<DETAILED_CAPTION>")
-                    description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
-                    infos["description"]=[]
-                    infos["goal"]=_goal
-                    infos["goal"][env_id] = o[env_id].split("\n\n")[-1]
-                    for i in range(config_args.rl_script_args.number_envs):
-                        try:
-                            infos["description"].append([description[i]['text'].split("Assistant:")[-1]])
-                        except:
-                            infos["description"].append( [description[i].split("Assistant:")[-1]])
-                    
-                    _goal = infos["goal"]
-                o,infos=get_infos(infos,config_args.rl_script_args.number_envs)
-            if len(bootstrap_dict["ids"]) > 0:
-                output = lm_server.custom_module_fns(
-                    module_function_keys=["value"],
-                    contexts=bootstrap_dict["contexts"],
-                    candidates=[[""] for _ in range(len(bootstrap_dict["contexts"]))],
-                )
-                for _i in range(len(output)):
-                    buffers[bootstrap_dict["ids"][_i]].finish_path(
-                        output[_i]["value"][0]
-                    )
-
+            #imagessave.append(train_env.get_frames()[0,:,:,:])
+        #print("GameFiles",files[i*jump:(i+1)*jump])
+        
+    with open("/home/bahaduri/VIPER/outputs/trajectories_train_llmonly.json", "w") as f:
+        json.dump(all_analysis, f, indent=4)
+    print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
+    lm_server.close()        
         # Perform PPO update!
-        print(f"PPO update number {epoch + 1}")
-        save_model_and_history = (
-            epoch % config_args.rl_script_args.save_freq == 0
-            or epoch == config_args.rl_script_args.epochs - 1
-        ) and epoch != 0
-        start_epoch = epoch - config_args.rl_script_args.save_freq
-        saving_path = (
-            f"{config_args.rl_script_args.output_dir}/epochs_{start_epoch}-{epoch}"
-        )
-        if save_model_and_history:
-            os.makedirs(saving_path, exist_ok=True)
-        loading_path = (
-            config_args.rl_script_args.loading_path
-            if config_args.rl_script_args.loading_path is not None
-            else ""
-        )
+       
 
-        # Stack trajectories for all envs
-        # TODO: Randomize and mix up environments' trajectories
-        trajectories = [buf.get() for buf in buffers]
-        collected_trajectories = {
-            k: torch.cat([traj[k] for traj in trajectories])
-            if isinstance(trajectories[0][k], torch.Tensor)
-            else list(f.reduce(add, [traj[k] for traj in trajectories]))
-            for k, _ in trajectories[0].items()
-        }
-
-        update_results = lm_server.update(
-            collected_trajectories["obs"],
-            collected_trajectories["possible_act"],
-            actions=collected_trajectories["act"],
-            returns=collected_trajectories["ret"],
-            advantages=collected_trajectories["adv"],
-            logprobs=collected_trajectories["logp"],
-            values=collected_trajectories["val"],
-            lr=config_args.rl_script_args.lr,
-            clip_eps=config_args.rl_script_args.clip_eps,
-            entropy_coef=config_args.rl_script_args.entropy_coef,
-            value_loss_coef=config_args.rl_script_args.value_loss_coef,
-            max_grad_norm=config_args.rl_script_args.max_grad_norm,
-            use_all_params_for_optim=config_args.rl_script_args.use_all_params_for_optim,
-            ppo_epochs=config_args.rl_script_args.ppo_epochs,
-            save_after_update=save_model_and_history,
-            output_dir=saving_path,
-            loading_path=loading_path,
-        )
-
-        avg_loss = np.mean([_r["loss"] for _r in update_results])
-        avg_policy_loss = np.mean([_r["policy_loss"] for _r in update_results])
-        avg_value_loss = np.mean([_r["value_loss"] for _r in update_results])
-        history["loss"].append(avg_loss)
-        history["policy_loss"].append(avg_policy_loss)
-        history["value_loss"].append(avg_value_loss)
-        history["possible_actions"].extend(collected_trajectories["possible_act"])
-        history["actions"].extend(
-            [
-                _poss_act[int(_a.item())]
-                for _poss_act, _a in zip(
-                    collected_trajectories["possible_act"],
-                    collected_trajectories["act"],
-                )
-            ]
-        )
-        history["prompts"].extend(collected_trajectories["obs"])
-        print(f"Update loss: {avg_loss}")
-
-        if save_model_and_history:
-            # Save history
-            avg_window = 500
-            with open(f"{saving_path}/history.pkl", "wb") as file:
-                pickle.dump(history, file)
-            success_rate = [1 if _ret > 1 else 0 for _ret in history["ep_ret"]]
-            averaged_success_rate = [
-                np.mean(success_rate[i - avg_window : i])
-                for i in range(len(success_rate))
-            ]
-            # run.log({"success rate": averaged_success_rate})
-            history = reset_history()
-
-    start_epoch = epoch - config_args.rl_script_args.save_freq
-    saving_path = (
-        f"{config_args.rl_script_args.output_dir}/epochs_{start_epoch}-{epoch}"
-    )
-    os.makedirs(saving_path, exist_ok=True)
-    with open(f"{saving_path}/history.pkl", "wb") as file:
-        pickle.dump(history, file)
-
-        lm_server.close()
-        exit()
-
-
-
-
-
-def visualize_bboxes(frames, object_info, output_dir, env_id=0):
-    """
-    Visualize bounding boxes on the images and save them to the output folder.
-    
-    Args:
-        frames: numpy array of images
-        object_info: dictionary containing object information including bounding boxes
-        output_dir: directory to save the visualized images
-        env_id: environment ID for naming the output file
-    """
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Process each frame
-    for i in range(frames.shape[0]):
-        # Convert BGR to RGB for visualization
-        img = cv2.cvtColor(frames[i, :, :, :], cv2.COLOR_BGR2RGB)
-        
-        # Get visible objects for this environment
-        visible_objects = object_info.get('visible_objects', [])
-        
-        # Draw bounding boxes for each visible object
-        for obj in visible_objects:
-            # Get bounding box coordinates
-            bbox = obj.get('bbox', {})
-            if not bbox:
-                continue
-                
-            # Get object type and ID
-            obj_type = obj.get('objectType', 'Unknown')
-            obj_id = obj.get('objectId', 'Unknown')
-            
-            # Convert normalized coordinates to pixel coordinates
-            h, w = img.shape[:2]
-            x1 = int(bbox.get('x1', 0) * w)
-            y1 = int(bbox.get('y1', 0) * h)
-            x2 = int(bbox.get('x2', 1) * w)
-            y2 = int(bbox.get('y2', 1) * h)
-            
-            #Draw rectangle
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            
-            # Add label
-            label = f"{obj_type} ({obj_id})"
-            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
-        # Save the image
-        output_path = os.path.join(output_dir, f"env_{env_id}_frame_{i}.png")
-        cv2.imwrite(output_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-        print(f"Saved visualization to {output_path}")
 
 if __name__ == "__main__":
     main()
