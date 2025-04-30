@@ -412,14 +412,18 @@ def main(config_args):
                     _frames.append(Image.fromarray(cv2.cvtColor(frames[_i, :, :, :], cv2.COLOR_BGR2RGB)))
                     #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
                     vlm_prompt.append(f"<DETAILED_CAPTION>")
-            description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
+            if config_args.eval_configs.use_vlm:
+                description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
             infos["description"]=[]
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
-            for i in range(config_args.rl_script_args.number_envs):
-                    try:
-                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
-                    except:
-                        infos["description"].append([description[i].split("Assistant:")[-1]])  # ['This is an animated image containing some objects.'])#
+            for _i in range(config_args.rl_script_args.number_envs):
+                    if config_args.eval_configs.use_VLM:
+                        try:
+                            infos["description"].append([description[_i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
+                        except:
+                            infos["description"].append([description[_i].split("Assistant:")[-1]])  # ['This is an animated image containing some objects.'])#
+                    else:
+                        infos["description"].append(["This is an animated image. In this image we can see some objects. In the background there is wall."])
                 
             _goal = infos["goal"]
             o, infos = get_infos(infos, config_args.rl_script_args.number_envs)  
@@ -513,13 +517,17 @@ def main(config_args):
                     #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
                     #vlm_prompt.append(f"describe in details the image and all objects present on it<image><end_of_utterance>\nAssistant:")
                     vlm_prompt.append(f"<DETAILED_CAPTION>")
-                description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
+                if config_args.eval_configs.use_VLM:
+                    description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
                 infos["description"]=[]
                 for _i in range(config_args.rl_script_args.number_envs):
-                    try:
-                        infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
-                    except:
-                        infos["description"].append([description[i]['text'].split("Assistant:")[-1]]) # ['This is an animated image containing some objects.'])#
+                    if config_args.eval_configs.use_VLM:
+                        try:
+                            infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
+                        except:
+                            infos["description"].append([description[_i]['text'].split("Assistant:")[-1]]) # ['This is an animated image containing some objects.'])#
+                    else:
+                        infos["description"].append(["This is an animated image. In this image we can see some objects. In the background there is wall."])
                 infos["goal"]=_goal
                 #print(r,d,infos["won"])
             # obss,infos=get_infos(infos,config_args.rl_script_args.number_envs)
@@ -538,7 +546,7 @@ def main(config_args):
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         all_analysis.extend(traj)
         print("wait 5sec")
-        p=f"/home/bahaduri/VIPER/outputs/success_eval/{_goal[0]}{int(np.mean(success)*100)}"
+        p=f"{config_args.eval_configs.log_path}/_{i}_{_goal[0]}{int(np.mean(success)*100)}"
         if not os.path.exists(p):
             os.mkdir(p)
             file=open(f"{p}/text.txt","w")
@@ -551,9 +559,23 @@ def main(config_args):
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
         
-    with open("/home/bahaduri/VIPER/outputs/trajectories_eval.json", "w") as f:
+    with open(config_args.eval_configs.json_file_path, "w") as f:
         json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
+    
+    #writing result to a text file
+    results_file = getattr(config_args.eval_configs, "results_file", None)
+    if results_file:
+        line = f"{'Task':<6} {'TaskName':<10} {'Use_VLM':<8} {'SR':<10} {'Ep. length':<12}\n"
+        separator = "-" * len(line)
+
+        write_header = not os.path.exists(results_file)
+
+        with open(results_file, "a") as f:
+            if write_header:
+                f.write(line)
+                f.write(separator + "\n")
+            f.write(f"{config_args.rl_script_args.task[0]:<6} {config_args.eval_configs.task_name:<10} {str(config_args.eval_configs.use_vlm):<8} {np.mean(success):<10.4f} {np.mean(eplen):<10.4f}\n")
     lm_server.close()        
         # Perform PPO update!
        
