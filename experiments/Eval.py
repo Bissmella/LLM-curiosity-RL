@@ -417,7 +417,7 @@ def main(config_args):
             infos["description"]=[]
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
             for _i in range(config_args.rl_script_args.number_envs):
-                    if config_args.eval_configs.use_VLM:
+                    if config_args.eval_configs.use_vlm:
                         try:
                             infos["description"].append([description[_i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
                         except:
@@ -517,11 +517,11 @@ def main(config_args):
                     #vlm_prompt.append(f"Your Past Action:{past_actions[_i]}.Describe your Current Observation")
                     #vlm_prompt.append(f"describe in details the image and all objects present on it<image><end_of_utterance>\nAssistant:")
                     vlm_prompt.append(f"<DETAILED_CAPTION>")
-                if config_args.eval_configs.use_VLM:
+                if config_args.eval_configs.use_vlm:
                     description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
                 infos["description"]=[]
                 for _i in range(config_args.rl_script_args.number_envs):
-                    if config_args.eval_configs.use_VLM:
+                    if config_args.eval_configs.use_vlm:
                         try:
                             infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
                         except:

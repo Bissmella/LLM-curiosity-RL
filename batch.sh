@@ -11,11 +11,13 @@ source /usr/local/miniconda/etc/profile.d/conda.sh
 cd /home/bahaduri/VIPER
 
 conda activate viper2
-TASKS=(1 2 3 4 5 6)
-TASK_NAMES=("pick" "look" "clean" "heat" "cool" "pick2")
+# TASKS=(1 2 3 4 5 6)
+TASKS=(1 2)
+# TASK_NAMES=("pick" "examine" "clean" "heat" "cool" "pick2")
+TASK_NAMES=("pick" "examine")
 NUM_TASKS=${#TASKS[@]}
 USE_VLM=(True False)
-RESULTS_FILE="/home/bahaduri/VIPER/outputs/full_eval_results.txt"
+RESULTS_FILE="/home/bahaduri/VIPER/outputs/full_eval_results_pick_examine.txt"
 for ((i=0; i<NUM_TASKS; i++)); do
     TASK=${TASKS[$i]}
     TASK_NAME=${TASK_NAMES[$i]}

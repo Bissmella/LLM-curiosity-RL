@@ -84,3 +84,5 @@ eval_configs:
     use_vlm: True
     log_path: ""
     json_file_path: ""
+    results_file: ""
+    task_name: ""
