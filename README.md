@@ -45,9 +45,10 @@ Experiments on the ALFWorld benchmark show that \textbf{VIPER} significantly out
     pip install -e .
     pip install wandb gym peft bitsandbytes pyvirtualdisplay
 
-### Download Alfworld episodes data
+### Download Alfworld episodes data and generate game files
     export ALFWORLD_DATA=<storage_path>
     alfworld-download
+    alfworld-generate
     change data path in alfworld configs to your custom path
 ## RUN PPO Training
     python3 -m lamorel_launcher.launch 

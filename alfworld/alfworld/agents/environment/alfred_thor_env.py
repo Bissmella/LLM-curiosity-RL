@@ -383,11 +383,12 @@ class AlfredThorEnv(object):
 
                 # # Only add solvable games
                 if os.path.exists(game_file_path):
-                     with open(game_file_path, 'r') as f:
-                         gamedata = json.load(f)
-                #
-                     if 'solvable' in gamedata and gamedata['solvable']:
-                         self.json_file_list.append(json_path)
+                    with open(game_file_path, 'r') as f:
+                        gamedata = json.load(f)
+                #    
+                     
+                    if 'solvable' in gamedata and gamedata['solvable']:
+                        self.json_file_list.append(json_path)
 
         print("Overall we have %s games..." % (str(len(self.json_file_list))))
         self.num_games = len(self.json_file_list)
