@@ -452,6 +452,7 @@ def main(config_args):
             output = lm_server.custom_module_fns(
                 ["score", "value"], contexts=prompts, candidates=possible_actions
             )
+            free_output = lm_server.generate(contexts=prompts,vlm=False)
             scores = scores_stacking([_o["score"] for _o in output])
 
             proba_dist = torch.distributions.Categorical(logits=scores)
@@ -495,7 +496,8 @@ def main(config_args):
                         'vlm_obj': entities[_i],
                         'matching_score': matching_score[_i],
                         'possible_actions': possible_actions[_i],
-                        'selected_action' : possible_actions[_i][int(actions_id[_i])]
+                        'selected_action' : possible_actions[_i][int(actions_id[_i])],
+                        'free_text' : free_output[_i]
                     }
                 )
             # print(transitions_buffer)

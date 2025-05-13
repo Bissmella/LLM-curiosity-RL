@@ -239,29 +239,49 @@ class HF_LLM(BaseLLM):
                 frames=contexts[_ii]
                 prompt = [prompts[_ii]]
                 
-                inputs = self._VLM_processor(
-                    text=prompt, images=frames, return_tensors="pt"
-                )
-                
-                generated_ids = self._VLM_model.generate(
-                    input_ids=inputs["input_ids"].to(self._VLM_model.device),
-                    pixel_values=inputs["pixel_values"].to(self._VLM_model.device),
-                    max_new_tokens=1024,
-                    do_sample=sample,
-                    num_beams=3,
-                    no_repeat_ngram_size=3,
-                    return_dict_in_generate=True,
-                )
-                
-                generated_text = self._VLM_processor.batch_decode(
-                    generated_ids["sequences"], skip_special_tokens=True
-                )
-                #parsed_answer=self._VLM_processor..batch_decode(generated_text, skip_special_tokens=True)
-                
+                vlm = kwargs.pop("vlm", True)
+                if vlm:
+                    inputs = self._VLM_processor(
+                        text=prompt, images=frames, return_tensors="pt"
+                    )
+                    
+                    generated_ids = self._VLM_model.generate(
+                        input_ids=inputs["input_ids"].to(self._VLM_model.device),
+                        pixel_values=inputs["pixel_values"].to(self._VLM_model.device),
+                        max_new_tokens=1024,
+                        do_sample=sample,
+                        num_beams=3,
+                        no_repeat_ngram_size=3,
+                        return_dict_in_generate=True,
+                    )
+                    
+                    generated_text = self._VLM_processor.batch_decode(
+                        generated_ids["sequences"], skip_special_tokens=True
+                    )
 
-                generations.append(
+                    generations.append(
                     {"text": generated_text[_ii]}
-                )
+                    )
+                #parsed_answer=self._VLM_processor..batch_decode(generated_text, skip_special_tokens=True)
+                else:
+                    encoded_input = (self._LLM_tokenizer.encode(contexts[_ii], return_tensors='pt', add_special_tokens=False)
+                             .to(self.device))
+                    results = self._LLM_model.generate(
+                        input_ids=encoded_input,
+                        return_dict_in_generate=True,
+                        output_scores=True,
+                        **kwargs
+                    )
+
+                    if self.model_type == "causal":  # hence input should be removed from result
+                        generated_sequences = results.sequences[:, encoded_input.shape[-1]:]
+                    else:
+                        generated_sequences = results.sequences[:, 1:]
+                    generated_text = self._LLM_tokenizer.batch_decode(generated_sequences, skip_special_tokens=True)
+
+                    generations.append(
+                        {"text": generated_text[0]}
+                    )
         
         return generations
 

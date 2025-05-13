@@ -1,7 +1,7 @@
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Eval_pure.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Eval.py" \
     rl_script_args.output_dir=.  \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="mistralai/Mistral-7B-Instruct-v0.3" \
@@ -20,6 +20,6 @@ python3 -m lamorel_launcher.launch \
     rl_script_args.name_environment="AlfredThorEnv" \
     rl_script_args.startepochs=0 \
     eval_configs.use_vlm=True \
-    eval_configs.log_path="/home/bahaduri/VIPER/outputs/test_eval_pick"\
-    eval_configs.json_file_path="/home/bahaduri/VIPER/outputs/test_eval_pick.json" \
-    eval_configs.results_file="/home/bahaduri/VIPER/outputs/test_result_pick.txt"
+    eval_configs.log_path="/home/bahaduri/VIPER/outputs/test_wfree_pick"\
+    eval_configs.json_file_path="/home/bahaduri/VIPER/outputs/test_wfree_pick.json" \
+    eval_configs.results_file="/home/bahaduri/VIPER/outputs/test_wfree_pick.txt"
