@@ -4,6 +4,8 @@ PPO implementation taken from https://github.com/openai/spinningup
 
 import sys
 import os
+import json
+from datetime import datetime
 
 # Add the root directory (one level up from current file)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -417,10 +419,14 @@ def main(config_args):
             scores = scores_stacking([_o["score"] for _o in output])
 
             proba_dist = torch.distributions.Categorical(logits=scores)
+            entropy = proba_dist.entropy()
             values = scores_stacking([_o["value"][0] for _o in output])
             sampled_actions = proba_dist.sample()
-            log_probs = proba_dist.log_prob(sampled_actions)
-            actions_id = sampled_actions.cpu().numpy()
+            batch_size = sampled_actions.shape[0]
+            num_actions = scores.shape[-1] 
+            random_actions = torch.randint(low=0, high=num_actions, size=(batch_size,))
+            log_probs = proba_dist.log_prob(random_actions)  #sampled_actions
+            actions_id = random_actions.cpu().numpy()  #sampled_actions
             actions_command = []
             for j in range(len(actions_id)):
                 command = possible_actions[j][int(actions_id[j])]

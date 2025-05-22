@@ -376,7 +376,8 @@ def main(config_args):
     generate_prompt = prompt_generator[config_args.rl_script_args.prompt_id]
     jump=config_args.rl_script_args.number_envs
     
-    obj_extractor = ObjectExtractor(use_spacy=False)
+
+    obj_extractor = None #ObjectExtractor(use_spacy=False)
     #output analysis
     all_analysis = []
     for i in tqdm(range(max_episods), desc="Evaluation"):
@@ -435,15 +436,19 @@ def main(config_args):
         for _i in range(config_args.rl_script_args.number_envs):
             traj[_i]['task'] = infos[_i]['goal']
             traj[_i]['steps'] = []
-            traj[_i]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[_i]['goal'])
+            if obj_extractor != None:
+                traj[_i]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[_i]['goal'])
         while not torch.all(torch.tensor(d)):
             # generate_prompt=sample(prompt_generator,1)[0]
             
             epit+=1
             possible_actions = [list(filter(lambda x: x not in ["look","inventory"]  , _i["possible_actions"])) for _i in infos]
+            if not config_args.eval_configs.zeroshot:
+                prompts = [prompt_maker({"info":_i,"transition_buffer":_o},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)
+                ]
+            else:
+                prompts = [RL4VLM_prompt({"info":_i,"transition_buffer":_o}, gt_obs, possible_actions,config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)]
             
-            prompts = [               prompt_maker({"info":_i,"transition_buffer":_o},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)
-            ]
             promptsave.append(prompts[0])
             imagessave.append(cv2.cvtColor(train_env.get_frames()[0,:,:,:], cv2.COLOR_BGR2RGB))
 
@@ -480,26 +485,44 @@ def main(config_args):
             visible_obj = []
             matching_score = []
             for _i in range(config_args.rl_script_args.number_envs):
-                entities.append(obj_extractor.extract_objects_from_text(infos[_i]['obs'][0]))  #objects mentioned in the vlm description
+                if obj_extractor != None:
+                    entities.append(obj_extractor.extract_objects_from_text(infos[_i]['obs'][0]))  #objects mentioned in the vlm description
                 visible_obj.append([vis_obj['objectType'] for vis_obj in env_object_info[_i]['visible_objects']]) #visible objects
-                obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])
+                #obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])
                 #main_entities.append(list(set(visible_obj[d]) & set(traj[d]['goal_entities'])))  #intersection of the goal entities and entities (vlm entities)
-                matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])[1]  #intersection of the goal entities and entities (vlm entities)
-                main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
-                matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[_i], entities[_i])[0])
-                traj[_i]['steps'].append(
-                    {
-                        'vlm_desc': infos[_i]['obs'][0],
-                        'text_desc': gt_obs[_i],
-                        'vis_obj': visible_obj[_i],
-                        'main_obj': main_entities[_i],
-                        'vlm_obj': entities[_i],
-                        'matching_score': matching_score[_i],
-                        'possible_actions': possible_actions[_i],
-                        'selected_action' : possible_actions[_i][int(actions_id[_i])],
-                        'free_text' : free_output[_i]
-                    }
-                )
+                if obj_extractor != None:
+                    matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])[1]  #intersection of the goal entities and entities (vlm entities)
+                    main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
+                    matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[_i], entities[_i])[0])
+                    traj[_i]['steps'].append(
+                        {
+                            'vlm_desc': infos[_i]['obs'][0],
+                            'text_desc': gt_obs[_i],
+                            'vis_obj': visible_obj[_i],
+                            'main_obj': main_entities[_i],
+                            'vlm_obj': entities[_i],
+                            'matching_score': matching_score[_i],
+                            'possible_actions': possible_actions[_i],
+                            'selected_action' : possible_actions[_i][int(actions_id[_i])],
+                            'prob_dist' : proba_dist.probs.tolist(),
+                            'free_text' : free_output[_i]
+                        }
+                    )
+                else:
+                    traj[_i]['steps'].append(
+                        {
+                            'vlm_desc': infos[_i]['obs'][0],
+                            'text_desc': gt_obs[_i],
+                            'vis_obj': visible_obj[_i],
+                            #'main_obj': main_entities[_i],
+                            #'vlm_obj': entities[_i],
+                            #'matching_score': matching_score[_i],
+                            'possible_actions': possible_actions[_i],
+                            'selected_action' : possible_actions[_i][int(actions_id[_i])],
+                            'prob_dist' : proba_dist.probs.tolist(),
+                            'free_text' : free_output[_i]
+                        }
+                    )
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
             gt_obs = [o[_i] for i in range(len(o))]  #ground truth textual observations for analysis
@@ -577,7 +600,7 @@ def main(config_args):
             if write_header:
                 f.write(line)
                 f.write(separator + "\n")
-            f.write(f"{config_args.rl_script_args.task[0]:<6} {config_args.eval_configs.task_name:<10} {str(config_args.eval_configs.use_vlm):<8} {np.mean(success):<10.4f} {np.mean(eplen):<10.4f}\n")
+            f.write(f"{config_args.rl_script_args.task[0]:<6} {config_args.eval_configs.task_name:<10} {config_args.eval_configs.use_vlm:<8} {np.mean(success):<10.4f} {np.mean(eplen):<10.4f}\n")
     lm_server.close()        
         # Perform PPO update!
        

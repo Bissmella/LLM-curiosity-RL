@@ -83,7 +83,7 @@ def get_templated_task_desc(traj_data):
     if pddl_params['object_sliced']:
         goal_str += "_slice"
 
-    template = random.choice(glib.gdict[goal_str]['templates'])
+    template = glib.gdict[goal_str]['templates'][0]#random.choice(glib.gdict[goal_str]['templates'])
     obj = pddl_params['object_target'].lower()
     recep = pddl_params['parent_target'].lower()
     toggle = pddl_params['toggle_target'].lower()

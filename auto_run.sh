@@ -1,3 +1,12 @@
+TASK=$1
+OUTPUT_DIR=$2
+
+#create output_dir if not existing
+if [ ! -d "$OUTPUT_DIR" ]; then
+    mkdir -p "$OUTPUT_DIR"
+    echo "Created directory: $OUTPUT_DIR"
+fi
+
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
@@ -8,7 +17,8 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.llm_args.model_type="causal" \
     rl_script_args.seed=3 \
     rl_script_args.number_envs=1 \
-    rl_script_args.task=[2] \
+    rl_script_args.task="[$TASK]" \
+    rl_script_args.output_dir="$OUTPUT_DIR" \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run=Examine_in_light \
     lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \

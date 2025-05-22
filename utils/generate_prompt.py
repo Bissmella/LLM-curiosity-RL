@@ -146,3 +146,21 @@ def prompt_maker(dico,element=["obs"],nb=0,limite=None):
     
     prompt += "\n<image><end_of_utterance>Next action of the agent: "
     return prompt
+
+
+def RL4VLM_prompt(dico, gt_obs, possible_acts, element=["obs"],nb=0,limite=None):
+    prompt = "Your are an expert in the ALFRED Embodied Environment. " 
+    prompt += dico['info']["goal"] +". "
+    prompt += "You are also given the following text description of the current scene: : [\'"
+    prompt += gt_obs[0] + "\']."
+    #prompt += dico['info']["obs"]
+    if len(dico['transition_buffer']) > 0:
+        prompt += " Your previous actions: [\n"
+        for d in dico["transition_buffer"][(-1-nb):limite]:
+            prompt += "{},\n".format(d['act'])
+        prompt += "]\n"
+    prompt += "Your admissible actions of the current situation are: [\n"
+    for a in possible_acts:
+        prompt += "{},\n".format(a)
+    prompt += "]. Give your next action from admissible actions."
+    return prompt

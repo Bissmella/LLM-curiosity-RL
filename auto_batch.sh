@@ -12,12 +12,12 @@ cd /home/bahaduri/VIPER
 
 conda activate viper2
 # TASKS=(1 2 3 4 5 6)
-TASKS=(1 2)
+TASKS=(1 2 3 4 5 6)
 # TASK_NAMES=("pick" "examine" "clean" "heat" "cool" "pick2")
-TASK_NAMES=("pick" "examine")
+TASK_NAMES=("pick" "examine" "clean" "heat" "cool" "pick2")
 NUM_TASKS=${#TASKS[@]}
 USE_VLM=(True False)
-RESULTS_FILE="/home/bahaduri/VIPER/outputs/full_eval_results_pick_examine.txt"
+RESULTS_FILE="/home/bahaduri/VIPER/outputs/full_eval_results_all.txt"
 for ((i=0; i<NUM_TASKS; i++)); do
     TASK=${TASKS[$i]}
     TASK_NAME=${TASK_NAMES[$i]}

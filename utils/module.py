@@ -314,7 +314,8 @@ class PeftInitializer(BaseModelInitializer):
         
         model.eval()  # Important to ensure ratios are 1 in first minibatch of PPO (i.e. no dropout)
         model._modules["_LLM_model"].config.use_cache = self._use_cache
-        self._print_trainable_parameters(peft_model)
+        if self._use_lora:
+            self._print_trainable_parameters(peft_model)
         #self._print_trainable_parameters(peft_model2)
         self._print_trainable_parameters(model)
         return model
