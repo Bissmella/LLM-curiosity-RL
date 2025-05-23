@@ -1,3 +1,4 @@
+# "meta-llama/Llama-3.2-1B-Instruct"
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
