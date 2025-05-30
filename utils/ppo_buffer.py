@@ -17,6 +17,7 @@ class PPOBuffer:
     def __init__(self, size, gamma=0.99, lam=0.95):
         self.obs_buf = [None for _ in range(size)]
         self.possible_act_buf = [None for _ in range(size)]
+        self.cmd_buf = [None for _ in range(size)]
         self.act_buf = np.zeros(size, dtype=np.float32)
         self.adv_buf = np.zeros(size, dtype=np.float32)
         self.rew_buf = np.zeros(size, dtype=np.float32)
@@ -26,13 +27,14 @@ class PPOBuffer:
         self.gamma, self.lam = gamma, lam
         self.ptr, self.path_start_idx, self.max_size = 0, 0, size
 
-    def store(self, obs, possible_act, act, rew, val, logp):
+    def store(self, obs, possible_act, cmd, act, rew, val, logp):
         """
         Append one timestep of agent-environment interaction to the buffer.
         """
         assert self.ptr < self.max_size  # buffer has to have room so you can store
         self.obs_buf[self.ptr] = obs
         self.possible_act_buf[self.ptr] = possible_act
+        self.cmd_buf[self.ptr] = cmd
         self.act_buf[self.ptr] = act
         self.rew_buf[self.ptr] = rew
         self.val_buf[self.ptr] = val
@@ -53,12 +55,17 @@ class PPOBuffer:
         This allows us to bootstrap the reward-to-go calculation to account
         for timesteps beyond the arbitrary episode horizon (or epoch cutoff).
         """
-
+        self.action_counts = {}
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
-
+        intrinsic_rews = np.array([
+                                    self.compute_intrinsic_reward(self.cmd_buf[i])
+                                    for i in range(self.path_start_idx, self.ptr)
+                                ])
+        intrinsic_rews = np.append(intrinsic_rews, 0)
         # the next two lines implement GAE-Lambda advantage calculation
+        rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
         self.adv_buf[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
 
@@ -85,3 +92,12 @@ class PPOBuffer:
             if not isinstance(v, list) else v
             for k, v in data.items()
         }
+    
+    def compute_intrinsic_reward(self, action, scale=0.0096):
+        # Update count
+        if action not in self.action_counts:
+            self.action_counts[action] = 0
+        self.action_counts[action] += 1
+
+        # Return inverse square root reward
+        return scale * 1 / np.sqrt(self.action_counts[action])

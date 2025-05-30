@@ -266,6 +266,7 @@ def reset_history():
         "possible_actions": [],
         "actions": [],
         "prompts": [],
+        "entropy": [],
     }
     
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -419,7 +420,8 @@ def main(config_args):
             scores = scores_stacking([_o["score"] for _o in output])
 
             proba_dist = torch.distributions.Categorical(logits=scores)
-            entropy = proba_dist.entropy()
+            entropy = proba_dist.entropy().mean().item()
+            history["entropy"].append(entropy)
             values = scores_stacking([_o["value"][0] for _o in output])
             sampled_actions = proba_dist.sample()
             batch_size = sampled_actions.shape[0]
@@ -476,6 +478,7 @@ def main(config_args):
                 buffers[i].store(
                     prompts[i],
                     possible_actions[i],
+                    command,
                     actions_id[i],
                     s[i],
                     values[i],

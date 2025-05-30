@@ -25,7 +25,7 @@ for ((i=0; i<NUM_TASKS; i++)); do
         
     #LOG_PATH="/home/bahaduri/VIPER/outputs/full_eval_${TASK}_VLM_${VLM}"
     JSON_PATH="/home/bahaduri/VIPER/outputs/full_eval_${TASK}_VLM_${VLM}.json"
-    OUTPUT_DIR="/home/bahaduri/VIPER/outputs/ppo_random_${TASK_NAME}"
+    OUTPUT_DIR="/home/bahaduri/VIPER/outputs/ppo_llm_wIntrinsic_${TASK_NAME}"
     #create log_path if not existing
     if [ ! -d "$OUTPUT_DIR" ]; then
         mkdir -p "$OUTPUT_DIR"
