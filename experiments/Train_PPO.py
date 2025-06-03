@@ -342,6 +342,7 @@ def main(config_args):
             // config_args.rl_script_args.number_envs,
             config_args.rl_script_args.gamma,
             config_args.rl_script_args.lam,
+            config_args.rl_script_args.intrinsic_reward,
         )
         for _ in range(config_args.rl_script_args.number_envs)
     ]
@@ -427,8 +428,8 @@ def main(config_args):
             batch_size = sampled_actions.shape[0]
             num_actions = scores.shape[-1] 
             random_actions = torch.randint(low=0, high=num_actions, size=(batch_size,))
-            log_probs = proba_dist.log_prob(random_actions)  #sampled_actions
-            actions_id = random_actions.cpu().numpy()  #sampled_actions
+            log_probs = proba_dist.log_prob(sampled_actions)  #sampled_actions
+            actions_id = sampled_actions.cpu().numpy()  #sampled_actions
             actions_command = []
             for j in range(len(actions_id)):
                 command = possible_actions[j][int(actions_id[j])]

@@ -14,7 +14,8 @@ class PPOBuffer:
     for calculating the advantages of state-action pairs.
     """
 
-    def __init__(self, size, gamma=0.99, lam=0.95):
+    def __init__(self, size, gamma=0.99, lam=0.95, intrinsic_reward=False):
+        self.intrinsic_reward= intrinsic_reward    #Use intrinsic reward based on novelty of actions
         self.obs_buf = [None for _ in range(size)]
         self.possible_act_buf = [None for _ in range(size)]
         self.cmd_buf = [None for _ in range(size)]
@@ -59,13 +60,14 @@ class PPOBuffer:
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
-        intrinsic_rews = np.array([
-                                    self.compute_intrinsic_reward(self.cmd_buf[i])
-                                    for i in range(self.path_start_idx, self.ptr)
-                                ])
-        intrinsic_rews = np.append(intrinsic_rews, 0)
-        # the next two lines implement GAE-Lambda advantage calculation
-        rews = rews + intrinsic_rews
+        if self.intrinsic_reward:
+            intrinsic_rews = np.array([
+                                        self.compute_intrinsic_reward(self.cmd_buf[i])
+                                        for i in range(self.path_start_idx, self.ptr)
+                                    ])
+            intrinsic_rews = np.append(intrinsic_rews, 0)
+            # the next two lines implement GAE-Lambda advantage calculation
+            rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
         self.adv_buf[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
 

@@ -8,7 +8,7 @@ lamorel_args:
     config_file: ../configs/accelerate/default_config.yaml
     machine_rank: 0
     main_process_ip: 127.0.0.1
-    main_process_port: 12347
+    main_process_port: 12348
     num_machines: 1
   llm_args:
     model_type: causal
@@ -76,6 +76,8 @@ rl_script_args:
   twc_levels:
   config_file:
   train_mode: true
+  ## reward
+  intrinsic_reward: False
 wandb_args:
     run: "BC"
     mode: "offline"

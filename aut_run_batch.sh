@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --partition=electronic
-#SBATCH --job-name=pick_train_analysis
+#SBATCH --job-name=pick_ppo_wintrinsic
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=2
-#SBATCH --time=28:00:00
+#SBATCH --gpus-per-node=1
+#SBATCH --time=46:00:00
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 nvidia-smi -L
@@ -12,7 +12,7 @@ cd /home/bahaduri/VIPER
 
 conda activate viper2
 # TASKS=(1 2 3 4 5 6)
-TASKS=(1 3)
+TASKS=(1) # 3)
 # TASK_NAMES=("pick" "examine" "clean" "heat" "cool" "pick2")
 TASK_NAMES=("pick" "clean")
 NUM_TASKS=${#TASKS[@]}
