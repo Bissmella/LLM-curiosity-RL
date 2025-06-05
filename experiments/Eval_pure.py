@@ -63,6 +63,11 @@ import torch.distributed as dist
 from huggingface_hub import login
 login("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")
 
+"""
+evaluates and stores evaluation details in json if path provided, stores images and textual details in log_path if exists
+uses VLM for textual description if use_vlm is True otherwise uses a fake description
+
+"""
 
 class PPOUpdater(BaseUpdater):
     def __init__(
@@ -382,8 +387,8 @@ def main(config_args):
     for i in tqdm(range(max_episods), desc="Evaluation"):
         promptsave=[]
         imagessave=[]
-        
-        traj = [{} for _ in range(config_args.rl_script_args.number_envs)] # trajectory full info for analysis
+        if config_args.eval_configs.json_file_path:
+            traj = [{} for _ in range(config_args.rl_script_args.number_envs)] # trajectory full info for analysis
         if config_args.rl_script_args.name_environment=='AlfredTWEnv':
             train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs,game_files=files[i*jump:(i+1)*jump])
             (o, infos), ep_ret, ep_len = ( train_env.reset(),[0 for _ in range(config_args.rl_script_args.number_envs)],[0 for _ in range(config_args.rl_script_args.number_envs)],)
@@ -432,10 +437,11 @@ def main(config_args):
         epit=0
 
         #for analysis data
-        for _i in range(config_args.rl_script_args.number_envs):
-            traj[_i]['task'] = infos[_i]['goal']
-            traj[_i]['steps'] = []
-            #traj[_i]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[_i]['goal'])
+        if config_args.eval_configs.json_file_path: 
+            for _i in range(config_args.rl_script_args.number_envs):
+                traj[_i]['task'] = infos[_i]['goal']
+                traj[_i]['steps'] = []
+                #traj[_i]['goal_entities'] = obj_extractor.extract_objects_from_text(infos[_i]['goal'])
         while not torch.all(torch.tensor(d)):
             # generate_prompt=sample(prompt_generator,1)[0]
             
@@ -474,30 +480,31 @@ def main(config_args):
 
 
             #do anlysis and store the analysis
-            entities = []
-            main_entities = []
-            visible_obj = []
-            matching_score = []
-            for _i in range(config_args.rl_script_args.number_envs):
-                #entities.append(obj_extractor.extract_objects_from_text(infos[_i]['obs'][0]))  #objects mentioned in the vlm description
-                visible_obj.append([vis_obj['objectType'] for vis_obj in env_object_info[_i]['visible_objects']]) #visible objects
-                #obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])
-                #main_entities.append(list(set(visible_obj[d]) & set(traj[d]['goal_entities'])))  #intersection of the goal entities and entities (vlm entities)
-                #matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])[1]  #intersection of the goal entities and entities (vlm entities)
-                #main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
-                #matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[_i], entities[_i])[0])
-                traj[_i]['steps'].append(
-                    {
-                        'vlm_desc': infos[_i]['obs'][0],
-                        'text_desc': gt_obs[_i],
-                        'vis_obj': visible_obj[_i],
-                        #'main_obj': main_entities[_i],
-                        #'vlm_obj': entities[_i],
-                        #'matching_score': matching_score[_i],
-                        'possible_actions': possible_actions[_i],
-                        'selected_action' : possible_actions[_i][int(actions_id[_i])]
-                    }
-                )
+            if config_args.eval_configs.json_file_path: 
+                entities = []
+                main_entities = []
+                visible_obj = []
+                matching_score = []
+                for _i in range(config_args.rl_script_args.number_envs):
+                    #entities.append(obj_extractor.extract_objects_from_text(infos[_i]['obs'][0]))  #objects mentioned in the vlm description
+                    visible_obj.append([vis_obj['objectType'] for vis_obj in env_object_info[_i]['visible_objects']]) #visible objects
+                    #obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])
+                    #main_entities.append(list(set(visible_obj[d]) & set(traj[d]['goal_entities'])))  #intersection of the goal entities and entities (vlm entities)
+                    #matched_entities = obj_extractor.calculate_overlap_score_transformer(traj[_i]['goal_entities'], visible_obj[_i])[1]  #intersection of the goal entities and entities (vlm entities)
+                    #main_entities.append(matched_entities)  #intersection of the goal entities and entities (vlm entities)
+                    #matching_score.append(obj_extractor.calculate_overlap_score_transformer(main_entities[_i], entities[_i])[0])
+                    traj[_i]['steps'].append(
+                        {
+                            'vlm_desc': infos[_i]['obs'][0],
+                            'text_desc': gt_obs[_i],
+                            'vis_obj': visible_obj[_i],
+                            #'main_obj': main_entities[_i],
+                            #'vlm_obj': entities[_i],
+                            #'matching_score': matching_score[_i],
+                            'possible_actions': possible_actions[_i],
+                            'selected_action' : possible_actions[_i][int(actions_id[_i])]
+                        }
+                    )
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
             gt_obs = [o[_i] for i in range(len(o))]  #ground truth textual observations for analysis
@@ -541,26 +548,30 @@ def main(config_args):
         success += list(s)
         if s.all()==1:  #in multi environment, now only adding to eplen if all of the environments were successfull.
             eplen.append(epit)
-        for _i in range(config_args.rl_script_args.number_envs):
-            traj[_i]['success'] = s[_i].item()
+        if config_args.eval_configs.json_file_path: 
+            for _i in range(config_args.rl_script_args.number_envs):
+                traj[_i]['success'] = s[_i].item()
+            all_analysis.extend(traj)
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
-        all_analysis.extend(traj)
+        
         print("wait 5sec")
-        p=f"{config_args.eval_configs.log_path}/_{i}_{_goal[0]}{int(np.mean(success)*100)}"
-        if not os.path.exists(p):
-            os.mkdir(p)
-            file=open(f"{p}/text.txt","w")
-            for idx in range(len(promptsave)):
-            #promptsave.append(prompts[0])
-                file.write(promptsave[idx]+"\n")
-                result = Image.fromarray(imagessave[idx])
-                result.save(f'{p}/{idx}.png')
+        if config_args.eval_configs.log_path:
+            p=f"{config_args.eval_configs.log_path}/_{i}_{_goal[0]}{int(np.mean(success)*100)}"
+            if not os.path.exists(p):
+                os.mkdir(p)
+                file=open(f"{p}/text.txt","w")
+                for idx in range(len(promptsave)):
+                #promptsave.append(prompts[0])
+                    file.write(promptsave[idx]+"\n")
+                    result = Image.fromarray(imagessave[idx])
+                    result.save(f'{p}/{idx}.png')
             
             #imagessave.append(train_env.get_frames()[0,:,:,:])
         #print("GameFiles",files[i*jump:(i+1)*jump])
-        
-    with open(config_args.eval_configs.json_file_path, "w") as f:
-        json.dump(all_analysis, f, indent=4)
+
+    if config_args.eval_configs.json_file_path:    
+        with open(config_args.eval_configs.json_file_path, "w") as f:
+            json.dump(all_analysis, f, indent=4)
     print(f"all sr:{np.mean(success)},all len:{np.mean(eplen)} ")
     
     #writing result to a text file

@@ -64,6 +64,12 @@ from huggingface_hub import login
 login("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")
 
 
+"""
+Evaluates and register the evaluation details in a json file.
+"""
+
+
+
 class PPOUpdater(BaseUpdater):
     def __init__(
         self,
