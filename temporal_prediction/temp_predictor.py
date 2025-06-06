@@ -270,31 +270,61 @@ class Temp_predictor():
                 loss, logits = outputs.loss, outputs.logits
 
             
-        training_args = TrainingArguments(
-                    output_dir="./t5_trajectory",
-                    per_device_train_batch_size=8,
-                    num_train_epochs=10,
-                    logging_dir="./logs",
-                    save_steps=500,
-                    save_total_limit=2,
-                )
-        
-        trainer = Trainer(
-            model= self.model,
-            args = training_args,
-            train_dataset = dataset
-            )
-        
-        trainer.train()
 
 
     def compute_novelty(self, sequence):
-        input_seq, target_seq = self.preprocess_trajectory(sequence)
-        input_ids = self.tokenizer(input_seq, return_tensors="pt", truncation=True).input_ids
-        target_ids = self.tokenizer(target_seq, return_tensors="pt", truncation=True).input_ids
+        """
+        To be used for both validation of the temporal predictor model and also for novelty score calculation.
+        """
+        self.model.eval()
+        eval_data = self.preprocess_trajectory(sequence)
+        model_inputs = self.tokenizer(
+            [inp for inp, _ in eval_data],
+            padding=False, #"max_length",
+            truncation=True,
+            #max_length=64,
+            return_tensors=None, #"pt"
+        )
+        labels = self.tokenizer(
+            [tgt for _, tgt in eval_data],
+            return_offsets_mapping=True,
+            padding=False, #"max_length",
+            truncation=True,
+            #max_length=64,
+            return_tensors=None, #"pt"
+        )
+        token_offsets = labels["offset_mapping"]
+        model_inputs["labels"] = labels["input_ids"]
+        model_inputs = self.assign_token_weights2([tgt for _, tgt in eval_data], model_inputs, token_offsets)
+        eval_dataset = TrajectoryDataset(model_inputs)
+        data_collator = CustomCollator(tokenizer=self.tokenizer, model=self.model)
+        eval_loader = DataLoader(eval_dataset, batch_size=64, collate_fn=data_collator, shuffle=True)
+        
+        val_loss = 0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for batch in eval_loader:
+                    input_ids = batch['input_ids'].to(self.device)
+                    input_attention_mask = batch['attention_mask'].to(self.device)
+                    labels = batch['labels'].to(self.device)
+                    loss_weights = batch['weights'].to(self.device)
+                    #labels_attention_mask = label['attention_mask'].to(self.device)
 
-        outputs = self.model(input_ids=input_ids, labels=target_ids)
-        loss = outputs.loss.item()
+                    outputs = self.model(input_ids=input_ids,
+                                        attention_mask=input_attention_mask,
+                                        encoder_outputs=None,
+                                        # decoder_input_ids=labels_input_ids,
+                                        # decoder_attention_mask=labels_attention_mask,
+                                        )
+                    loss, logits = outputs.loss, outputs.logits
+                    val_loss += loss.item()
+                    preds = torch.argmax(logits, dim=-1)
+                    mask = labels != -100
+                    correct += ((preds == labels) & mask).sum().item()
+                    total += mask.sum().item()
+        avg_val_loss = val_loss/ len(eval_loader)
+        val_accuracy = correct/total
         return loss   #higher = more novel
     
     def assign_token_weights2(self, text, model_inputs, offsets):
