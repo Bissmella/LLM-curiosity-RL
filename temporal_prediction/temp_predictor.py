@@ -1,10 +1,11 @@
-from transformers import T5Tokenizer, T5Model
+from transformers import T5TokenizerFast, T5Model
 from transformers import T5ForConditionalGeneration, Trainer, TrainingArguments
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.nn import CrossEntropyLoss
 from transformers import DataCollatorForSeq2Seq
-
+from tqdm import tqdm
+from torch.nn.utils.rnn import pad_sequence
 
 ALF_ACTION_LIST=["pass", "goto", "pick", "put", "open", "close", "toggle", "heat", "clean", "cool", "slice", "inventory", "examine", "look"]
 
@@ -27,6 +28,7 @@ class TempPredictorModel(T5ForConditionalGeneration):
         head_mask=None,
         output_attentions=None,
         output_hidden_states=None,
+        loss_weights=None,
         **kwargs
     ):
         r"""
@@ -142,8 +144,15 @@ class TempPredictorModel(T5ForConditionalGeneration):
 
         decoder_outputs = (lm_logits,) + decoder_outputs[1:]  # Add hidden states and attention if they are here
         if labels is not None:
-            loss_fct = CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
+            if loss_weights is not None:
+                loss_fct = CrossEntropyLoss(ignore_index=-100, reduction='none')
+                loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
+                loss = loss * loss_weights.view(-1)
+                loss = torch.mean(loss)
+            else:
+                loss_fct = CrossEntropyLoss(ignore_index=-100, reduction='none')
+                loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
+            
             # TODO(thom): Add z_loss https://github.com/tensorflow/mesh/blob/fa19d69eafc9a482aff0b59ddd96b025c0cb207d/mesh_tensorflow/layers.py#L666
             decoder_outputs = (loss,) + decoder_outputs
 
@@ -163,18 +172,42 @@ class TrajectoryDataset(Dataset):
         return len(self.encodings["input_ids"])
 
 
+class CustomCollator:
+    def __init__(self, tokenizer, model):
+        self.base_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
+
+    def __call__(self, batch):
+        # Separate the weights before calling the base collator
+        weights = [torch.tensor(example["weights"], dtype=torch.float) for example in batch]
+
+        # Remove weights from examples to avoid issues with the base collator
+        for example in batch:
+            del example["weights"]
+
+        # Use Huggingface's default collator to pad everything else
+        batch_out = self.base_collator(batch)
+
+        # Pad weights to match the padded labels
+        padded_weights = pad_sequence(weights, batch_first=True, padding_value=1.0)  # default neutral weight
+
+        batch_out["weights"] = padded_weights
+
+        return batch_out
+
+
 class Temp_predictor():
-    def __init__(self, accelerator, optimizer, temp_model_lr, device):
+    def __init__(self, accelerator, optimizer, epochs, temp_model_lr, device):
 
         """
         tokenizer = T5Tokenizer.from_pretrained("t5-small")
         model = T5Model.from_pretrained("t5-small")
         """
-        self.tokenizer = T5Tokenizer.from_pretrained("t5-small")
+        self.tokenizer = T5TokenizerFast.from_pretrained("t5-small")
         self.model = T5ForConditionalGeneration.from_pretrained("t5-small")
         self.temp_model_optimizer = torch.optim.Adam(self.model.parameters(), lr = temp_model_lr)
         self.device = device
         self.accelerator = accelerator
+        self.epochs = epochs
 
 
 
@@ -190,6 +223,7 @@ class Temp_predictor():
         return model_inputs, labels["offset_mapping"]
 
     def update_temp_predictor(self, buffer):
+        self.model.train()
         train_data = [self.preprocess_trajectory(traj) for traj in buffer]
 
         model_inputs = self.tokenizer(
@@ -197,7 +231,7 @@ class Temp_predictor():
             padding=False, #"max_length",
             truncation=True,
             #max_length=64,
-            return_tensors="pt"
+            return_tensors=None, #"pt"
         )
         labels = self.tokenizer(
             [tgt for _, tgt in train_data],
@@ -205,31 +239,35 @@ class Temp_predictor():
             padding=False, #"max_length",
             truncation=True,
             #max_length=64,
-            return_tensors="pt"
+            return_tensors=None, #"pt"
         )
         token_offsets = labels["offset_mapping"]
         model_inputs["labels"] = labels["input_ids"]
-
+        model_inputs = self.assign_token_weights2([tgt for _, tgt in train_data], model_inputs, token_offsets)
         dataset = TrajectoryDataset(model_inputs)
-        data_collator = DataCollatorForSeq2Seq(tokenizer=self.tokenizer, model=self.model)
+        data_collator = CustomCollator(tokenizer=self.tokenizer, model=self.model)
         train_loader = DataLoader(dataset, batch_size=64, collate_fn=data_collator, shuffle=True)
-        self.model.zero_grad()
-        epoch_loss= 0
-        correct = 0
-        total = 0
+        
 
-        for input, label in train_loader:
-            input_ids = input['input_ids'].to(self.device)
-            input_attention_mask = input['attention_mask'].to(self.device)
-            labels_input_ids = label['input_ids'].to(self.device)
-            labels_attention_mask = label['attention_mask'].to(self.device)
+        for _ in tqdm(range(self.epochs)):
+            self.model.zero_grad()
+            epoch_loss= 0
+            correct = 0
+            total = 0
+            for batch in train_loader:
+                input_ids = batch['input_ids'].to(self.device)
+                input_attention_mask = batch['attention_mask'].to(self.device)
+                labels = batch['labels'].to(self.device)
+                loss_weights = batch['weights'].to(self.device)
+                #labels_attention_mask = label['attention_mask'].to(self.device)
 
-            outputs = self.model(input_ids=input_ids,
-                                attention_mask=input_attention_mask,
-                                encoder_outputs=None,
-                                decoder_input_ids=labels_input_ids,
-                                decoder_attention_mask=labels_attention_mask,)
-            loss, logits = outputs.loss, outputs.logits
+                outputs = self.model(input_ids=input_ids,
+                                    attention_mask=input_attention_mask,
+                                    encoder_outputs=None,
+                                    # decoder_input_ids=labels_input_ids,
+                                    # decoder_attention_mask=labels_attention_mask,
+                                    )
+                loss, logits = outputs.loss, outputs.logits
 
             
         training_args = TrainingArguments(
@@ -259,33 +297,86 @@ class Temp_predictor():
         loss = outputs.loss.item()
         return loss   #higher = more novel
     
+    def assign_token_weights2(self, text, model_inputs, offsets):
+        sentence_spans = []
+        model_inputs['weights'] = []
+        for sentence in text:
+            cursor = 0
+            word_span = []
+            for word in sentence.split():
+                word_span.append((cursor, cursor + len(word)))
+                cursor += len(word) + 1
+            sentence_spans.append(word_span)
+        
+        for i, word_spans in enumerate(sentence_spans):
+            offset = offsets[i]
+            offset_counter = 0
+            weights = []
+            for j, word_span in enumerate(word_spans):
+                #if offset[offset_counter][1] == word_span[1]
+                counter = 0
+                while (offset_counter + counter < len(offset)) and offset[offset_counter + counter][1] <= word_span[1]:
+                    if text[i][word_span[0]: word_span[1]] in ALF_ACTION_LIST:
+                        #breakpoint()
+                        weights.append(2)
+                    else:
+                        weights.append(1)
+                    counter += 1
+                offset_counter += counter
+            while len(weights) < len(offset):
+                weights.append(1)
+            model_inputs['weights'].append(weights)
+        return model_inputs
+    
+    def assign_token_weights(self, text, model_inputs, offsets):
+        model_inputs['weights'] = []
 
-    def assign_token_weights(self, text, important_words, tokenizer):
-        encoding = tokenizer(text, return_offsets_mapping=True)
-        offsets = encoding["offset_mapping"]
-        tokens = tokenizer.convert_ids_to_tokens(encoding["input_ids"])
-        words = text.split()
+        for i, sentence in enumerate(text):
+            print(i, sentence)
+            cursor = 0
+            word_spans = []
+            for word in sentence.split():
+                word_spans.append((cursor, cursor + len(word)))
+                cursor += len(word) + 1  # +1 for space
 
-        # Create character span lookup for each word
-        word_spans = []
-        cursor = 0
-        for word in words:
-            start = text.find(word, cursor)
-            end = start + len(word)
-            word_spans.append((start, end))
-            cursor = end
+            offset = offsets[i]
+            offset_counter = 0
+            weights = []
 
-        # Map token offset to word weight
-        token_weights = []
-        for (start, end) in offsets:
-            matched = None
-            for i, (w_start, w_end) in enumerate(word_spans):
-                if start >= w_start and end <= w_end:
-                    matched = words[i]
-                    break
-            if matched and matched in important_words:
-                token_weights.append(2.0)
-            else:
-                token_weights.append(1.0)
+            for word_span in word_spans:
+                start, end = word_span
+                token_weights = []
 
-        return token_weights 
+                # Check if this word is an action
+                is_action = sentence[start:end] in ALF_ACTION_LIST
+                #breakpoint()
+                # Assign weights to all tokens that belong to this word
+                counter = 0
+                #breakpoint()
+                while (offset_counter + counter < len(offset)) and (offset[offset_counter + counter][1] <= end):
+                    #breakpoint()
+                    if offset[offset_counter + counter] == (0, 0):  # special token
+                        token_weights.append(1)
+                    else:
+                        token_weights.append(2 if is_action else 1)
+                    #breakpoint()
+                    counter += 1
+
+                # Add final token that ends the word
+                # if (offset_counter + counter < len(offset)):
+                #     token_weights.append(2 if is_action else 1)
+                #     counter += 1
+
+                offset_counter += counter
+                weights.extend(token_weights)
+
+            # Fill with default weight if any tokens are left (e.g. punctuation or special tokens)
+            while len(weights) < len(offset):
+                weights.append(1)
+
+            model_inputs['weights'].append(weights)
+
+        return model_inputs
+    
+
+                    
