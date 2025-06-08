@@ -1,0 +1,4 @@
+GPU 0: NVIDIA TITAN RTX (UUID: GPU-12c3ac4f-4ee0-6298-d9cf-f11c13e09069)
+GPU 1: NVIDIA TITAN RTX (UUID: GPU-64b6f7ce-c536-c884-32c5-7211011c5d64)
+Running Task 1 (pick) with VLM: 
+[2025-06-08 07:23:50,336][root][INFO] - Using nproc_per_node=2.

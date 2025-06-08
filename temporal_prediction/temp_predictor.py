@@ -196,7 +196,7 @@ class CustomCollator:
 
 
 class Temp_predictor():
-    def __init__(self, accelerator, optimizer, epochs, temp_model_lr, device):
+    def __init__(self, accelerator, device, optimizer, epochs, temp_model_lr, ):
 
         """
         tokenizer = T5Tokenizer.from_pretrained("t5-small")
@@ -211,9 +211,18 @@ class Temp_predictor():
 
 
 
-    def preprocess_trajectories(self, trajectory,):
-        input_seq= None
-        target_seq= None
+    def preprocess_trajectories(self, buffer_goals, buffer_trajLen, buffer_actions):
+        input_seq = []
+        target_seq = []
+        counter =0
+        for i, len in enumerate(buffer_trajLen):
+            input_seq.append(buffer_goals[i])
+            acts = buffer_actions[counter: len]
+            counter += len
+            flattened = ", ".join(acts)
+            target_seq.append(flattened)
+        # input_seq= None
+        # target_seq= None
         return input_seq, target_seq
     
     def preprocess_data(self, examples):
@@ -222,9 +231,9 @@ class Temp_predictor():
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs, labels["offset_mapping"]
 
-    def update_temp_predictor(self, buffer):
+    def update_model(self, buffer_goals, buffer_trajLen, buffer_actions):
         self.model.train()
-        train_data = [self.preprocess_trajectory(traj) for traj in buffer]
+        train_data = self.preprocess_trajectory(buffer_goals, buffer_trajLen, buffer_actions)
 
         model_inputs = self.tokenizer(
             [inp for inp, _ in train_data],
@@ -325,6 +334,8 @@ class Temp_predictor():
                     total += mask.sum().item()
         avg_val_loss = val_loss/ len(eval_loader)
         val_accuracy = correct/total
+        #TODO
+        #novelty_scores
         return loss   #higher = more novel
     
     def assign_token_weights2(self, text, model_inputs, offsets):

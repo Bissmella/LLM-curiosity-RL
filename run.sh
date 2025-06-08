@@ -1,7 +1,7 @@
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_PPO.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_cur_PPO.py" \
     rl_script_args.output_dir="/home/bahaduri/VIPER/outputs/tmps"  \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \

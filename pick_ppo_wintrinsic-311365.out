@@ -1,0 +1,55 @@
+GPU 0: NVIDIA TITAN RTX (UUID: GPU-64b6f7ce-c536-c884-32c5-7211011c5d64)
+GPU 1: NVIDIA TITAN RTX (UUID: GPU-0e35f89d-64c8-a8a5-6656-08a0a5115de9)
+Created directory: /home/bahaduri/VIPER/outputs/ppo_llm_wIntrinsic_dual_pick
+Running Task 1 (pick) with VLM: 
+[2025-06-08 00:27:51,114][root][INFO] - Using nproc_per_node=2.
+[2025-06-08 00:28:01,593][lamorel_logger][INFO] - Init rl group for process 1
+[2025-06-08 00:28:01,593][lamorel_logger][INFO] - Init llm group for process 1
+[2025-06-08 00:28:01,597][lamorel_logger][INFO] - Init rl-llm group for process 1
+[2025-06-08 00:28:01,721][lamorel_logger][INFO] - Init rl group for process 0
+[2025-06-08 00:28:01,726][lamorel_logger][INFO] - Init llm group for process 0
+[2025-06-08 00:28:01,726][lamorel_logger][INFO] - Init rl-llm group for process 0
+here! cuda:0
+[2025-06-08 00:28:01,731][lamorel_logger][INFO] - 2 gpus available for current LLM but using only model_parallelism_size = 1
+[2025-06-08 00:28:01,731][lamorel_logger][INFO] - Devices on process 1 (index 0): [0]
+Parallelising HF LLM on 1 devices
+Loading model meta-llama/Llama-3.2-1B-Instruct
+Initialize AlfredThorEnv...
+Loading vlm model microsoft/Florence-2-base-ft
+[2025-06-08 00:28:06,725][accelerate.utils.modeling][WARNING] - The model weights are not tied. Please use the `tie_weights` method before using the `infer_auto_device` function.
+[2025-06-08 00:28:08,649][accelerate.utils.modeling][WARNING] - The model weights are not tied. Please use the `tie_weights` method before using the `infer_auto_device` function.
+trainable params: 3407872 || all params: 752683008 || trainable%: 0.4527632434609179
+trainable params: 9705474 || all params: 1037504290 || trainable%: 0.9354635054087342
+[2025-06-08 00:28:18,580][lamorel_logger][INFO] - Launching LLM server process 1
+Overall we have 790 games...
+Training with 790 games
+Overall we have 790 games...
+Training with 790 games
+Found path: /home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64
+Mono path[0] = '/home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Managed'
+Mono config path = '/home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Mono/etc'
+Preloaded 'ScreenSelector.so'
+Display 0 'screen': 1024x768 (primary device).
+Logging to /home/bahaduri/.config/unity3d/Allen Institute for Artificial Intelligence/AI2-Thor/Player.log
+ThorEnv started.
+Resetting ThorEnv
+Task: put a candle in countertop
+Resetting ThorEnv
+Task: put a pillow in armchair
+Resetting ThorEnv
+Task: put some alarmclock on shelf
+Resetting ThorEnv
+Task: put a toiletpaper in shelf
+Resetting ThorEnv
+Task: put some laptop on desk
+Resetting ThorEnv
+Task: put some spraybottle on garbagecan
+Resetting ThorEnv
+Task: put a remotecontrol in armchair
+Resetting ThorEnv
+Task: put some dishsponge on cart
+PPO update number 84
+[1;34mwandb[0m: 
+[1;34mwandb[0m: You can sync this run to the cloud by running:
+[1;34mwandb[0m: [1mwandb sync /home/bahaduri/VIPER/outputs/2025-06-08/00-27-50/wandb/offline-run-20250608_002956-eu9q7gnl[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/offline-run-20250608_002956-eu9q7gnl/logs[0m

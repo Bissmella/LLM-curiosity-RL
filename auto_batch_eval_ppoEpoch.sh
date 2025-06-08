@@ -18,7 +18,7 @@ JSON_PATH=""
 LOG_PATH=""
 VLM=True
 TASK=1
-MODELS=("llm" "intrinsic")
+MODELS=("intrinsic")   #"llm" 
 for MODEL in "${MODELS[@]}"; do
     if [[ "$MODEL" == "llm" ]]; then
         output_dir="/home/bahaduri/VIPER/outputs/ppo_llm_wEntropy_pick"

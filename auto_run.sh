@@ -2,7 +2,7 @@ TASK=$1
 OUTPUT_DIR=$2
 INTRINSIC_REWARD=True
 STARTEPOCHS=83
-LOADING_PATH="/home/bahaduri/VIPER/outputs/ppo_llm_wIntrinsic_pick/epochs_81-82"
+LOADING_PATH=""
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
@@ -12,7 +12,7 @@ fi
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_PPO.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_dual_PPO.py" \
     rl_script_args.output_dir=.  \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
@@ -22,7 +22,6 @@ python3 -m lamorel_launcher.launch \
     rl_script_args.task="[$TASK]" \
     rl_script_args.output_dir="$OUTPUT_DIR" \
     rl_script_args.intrinsic_reward="$INTRINSIC_REWARD" \
-    rl_script_args.loading_path="$LOADING_PATH" \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run=Examine_in_light \
     lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \

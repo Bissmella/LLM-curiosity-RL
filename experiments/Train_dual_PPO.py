@@ -21,7 +21,6 @@ from typing import List
 from torch.nn.functional import log_softmax
 import hydra
 from utils import *
-from temporal_prediction import *
 import torch
 import bitsandbytes
 import numpy as np
@@ -116,10 +115,10 @@ class PPOUpdater(BaseUpdater):
                 )
 
         current_process_buffer = {}
-        for k in ["actions", "advantages", "returns", "logprobs", "values"]:
+        for k in ["actions", "advantages", "returns", "returns_cur", "logprobs", "values", "values_cur"]:
             current_process_buffer[k] = kwargs[k][_current_batch_ids]
 
-        epochs_losses = {"value": [], "policy": [], "loss": []}
+        epochs_losses = {"value": [], "policy": [], "loss": [], "valueCur": [],}
 
         n_minibatches = math.ceil(len(contexts) / self._minibatch_size)
         for i in tqdm(range(kwargs["ppo_epochs"]), ascii=" " * 9 + ">", ncols=100):
@@ -154,7 +153,7 @@ class PPOUpdater(BaseUpdater):
                         _batch_size = self._gradient_minibatch_size
                     # Use LLM to compute again action probabilities and value
                     output = self._llm_module(
-                        ["score", "value"],
+                        ["score", "value", "value_cur"],
                         contexts=_contexts,
                         candidates=_candidates,
                         require_grad=True,
@@ -164,7 +163,7 @@ class PPOUpdater(BaseUpdater):
                     # print(scores,"\n\n\n\n\n")
                     probas = torch.distributions.Categorical(logits=scores)
                     values = scores_stacking([_o["value"][0] for _o in output])
-
+                    values_cur = scores_stacking([_o["value_cur"][0] for _o in output])
                     # Compute policy loss
                     entropy = probas.entropy().mean()
                     log_prob = probas.log_prob(
@@ -218,6 +217,32 @@ class PPOUpdater(BaseUpdater):
                         unclipped_value_error, clipped_value_error
                     ).mean()
                     epochs_losses["value"].append(value_loss.detach().cpu().item())
+                    #compute curiosity value loss
+                    returns_cur = current_process_buffer["returns_cur"][_start_idx:_stop_idx]
+                    mask = ~torch.isnan(returns_cur)
+                    if mask.any():
+                        returns_cur_valid = returns_cur[mask]
+                        values_cur_valid = values_cur[mask]
+
+                        unclipped_valueCur_error = (values_cur_valid - returns_cur_valid) ** 2
+
+                        clipped_valuesCur = returns_cur_valid + torch.clamp(
+                            values_cur_valid - returns_cur_valid,
+                            -kwargs["clip_eps"],
+                            kwargs["clip_eps"]
+                        )
+
+                        clipped_valueCur_error = (clipped_valuesCur - returns_cur_valid) ** 2
+
+                        valueCur_loss = torch.max(unclipped_valueCur_error, clipped_valueCur_error).mean()
+                    else:
+                        # Important: requires_grad=True keeps the backward graph alive
+                        valueCur_loss = torch.tensor(0.0, device=values_cur.device, requires_grad=True)
+
+                    # Logging and accumulation
+                    epochs_losses["valueCur"].append(valueCur_loss.detach().cpu().item())
+                    value_loss += valueCur_loss
+
 
                     # Compute final loss
                     loss = (
@@ -253,6 +278,7 @@ class PPOUpdater(BaseUpdater):
             "loss": np.mean(epochs_losses["loss"]),
             "value_loss": np.mean(epochs_losses["value"]),
             "policy_loss": np.mean(epochs_losses["policy"]),
+            "valueCur_loss": np.mean(epochs_losses["valueCur"])
         }
 
 
@@ -264,6 +290,7 @@ def reset_history():
         "loss": [],
         "policy_loss": [],
         "value_loss": [],
+        "valueCur_loss": [],
         "possible_actions": [],
         "actions": [],
         "prompts": [],
@@ -324,12 +351,15 @@ def main(config_args):
                 config_args.lamorel_args.llm_args.model_type,
                 config_args.lamorel_args.llm_args.pre_encode_inputs,
             ),
+            "value_cur": ValueHeadModuleFn(
+                config_args.lamorel_args.llm_args.model_type,
+                config_args.lamorel_args.llm_args.pre_encode_inputs,
+            ),
         },
     )
 
     caller_devices = lm_server.accelerator.device
-    print("here!")
-    temporal_predictor = Temp_predictor(accelerator=accelerator, device=torch.device("cuda:1"))
+    print("here!", caller_devices)
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()
@@ -341,12 +371,13 @@ def main(config_args):
     wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
     # Set up experience buffer
     buffers = [
-        PPOBuffer(
+        PPOBufferAugmented(
             config_args.rl_script_args.steps_per_epoch
             // config_args.rl_script_args.number_envs,
             config_args.rl_script_args.gamma,
             config_args.rl_script_args.lam,
             config_args.rl_script_args.intrinsic_reward,
+            dualValue=True
         )
         for _ in range(config_args.rl_script_args.number_envs)
     ]
@@ -420,7 +451,7 @@ def main(config_args):
             
             
             output = lm_server.custom_module_fns(
-                ["score", "value"], contexts=prompts, candidates=possible_actions
+                ["score", "value", "value_cur"], contexts=prompts, candidates=possible_actions
             )
             scores = scores_stacking([_o["score"] for _o in output])
 
@@ -495,7 +526,6 @@ def main(config_args):
                 timeout = ep_len[i] == config_args.rl_script_args.max_ep_len
                 terminal = d[i] or timeout
                 if terminal or epoch_ended:
-                    buffers[i].store_goal(infos[i]['goal'], ep_len[i])
                     if not terminal:
                         bootstrap_dict["ids"].append(i)
                         bootstrap_dict["contexts"].append(
@@ -509,7 +539,7 @@ def main(config_args):
                             history["ep_ret"].append(ep_ret[i])
                             history["goal"].append(infos[i]["goal"])
                             not_saved[i] = False
-                        buffers[i].finish_path(0)
+                        buffers[i].finish_path(0, 0, s[i]==1)
 
                         # history["ep_len"].append(ep_len[i])
                         # history["ep_ret"].append(ep_ret[i])
@@ -555,13 +585,13 @@ def main(config_args):
                 o,infos=get_infos(infos,config_args.rl_script_args.number_envs)
             if len(bootstrap_dict["ids"]) > 0:
                 output = lm_server.custom_module_fns(
-                    module_function_keys=["value"],
+                    module_function_keys=["value", "value_cur"],
                     contexts=bootstrap_dict["contexts"],
                     candidates=[[""] for _ in range(len(bootstrap_dict["contexts"]))],
                 )
                 for _i in range(len(output)):
                     buffers[bootstrap_dict["ids"][_i]].finish_path(
-                        output[_i]["value"][0]
+                        output[_i]["value"][0], output[_i]["value_cur"][0], s[0]==1
                     )
 
         # Perform PPO update!
@@ -597,9 +627,11 @@ def main(config_args):
             collected_trajectories["possible_act"],
             actions=collected_trajectories["act"],
             returns=collected_trajectories["ret"],
+            returns_cur=collected_trajectories["retCur_buf"],
             advantages=collected_trajectories["adv"],
             logprobs=collected_trajectories["logp"],
             values=collected_trajectories["val"],
+            values_cur=collected_trajectories["valCur_buf"],
             lr=config_args.rl_script_args.lr,
             clip_eps=config_args.rl_script_args.clip_eps,
             entropy_coef=config_args.rl_script_args.entropy_coef,
@@ -612,17 +644,14 @@ def main(config_args):
             loading_path=loading_path,
         )
 
-        #TODO  update the temporal predictor model
-        #update
-        if epoch > 0:
-            temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].act_buf)
-
         avg_loss = np.mean([_r["loss"] for _r in update_results])
         avg_policy_loss = np.mean([_r["policy_loss"] for _r in update_results])
         avg_value_loss = np.mean([_r["value_loss"] for _r in update_results])
+        avg_valueCur_loss = np.mean([_r["valueCur"] for _r in update_results])
         history["loss"].append(avg_loss)
         history["policy_loss"].append(avg_policy_loss)
         history["value_loss"].append(avg_value_loss)
+        history["valueCur_loss"].append(avg_valueCur_loss)
         history["possible_actions"].extend(collected_trajectories["possible_act"])
         history["actions"].extend(
             [
