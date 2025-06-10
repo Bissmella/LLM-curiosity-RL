@@ -1,0 +1,132 @@
+GPU 0: NVIDIA TITAN RTX (UUID: GPU-95abf5ac-2771-ae89-0b60-050bcd86f015)
+GPU 1: NVIDIA TITAN RTX (UUID: GPU-25ccc36f-537e-2076-6d31-0f835e102283)
+Running Task 1 (pick) with VLM: 
+[2025-06-08 20:18:22,006][root][INFO] - Using nproc_per_node=2.
+[2025-06-08 20:18:33,438][lamorel_logger][INFO] - Init rl group for process 1
+[2025-06-08 20:18:33,438][lamorel_logger][INFO] - Init llm group for process 1
+[2025-06-08 20:18:33,444][lamorel_logger][INFO] - Init rl-llm group for process 1
+[2025-06-08 20:18:33,537][lamorel_logger][INFO] - Init rl group for process 0
+[2025-06-08 20:18:33,543][lamorel_logger][INFO] - Init llm group for process 0
+[2025-06-08 20:18:33,543][lamorel_logger][INFO] - Init rl-llm group for process 0
+here! cuda:0
+[2025-06-08 20:18:33,551][lamorel_logger][INFO] - 2 gpus available for current LLM but using only model_parallelism_size = 1
+[2025-06-08 20:18:33,551][lamorel_logger][INFO] - Devices on process 1 (index 0): [0]
+Parallelising HF LLM on 1 devices
+Loading model meta-llama/Llama-3.2-1B-Instruct
+Initialize AlfredThorEnv...
+Loading vlm model microsoft/Florence-2-base-ft
+[2025-06-08 20:18:39,246][accelerate.utils.modeling][WARNING] - The model weights are not tied. Please use the `tie_weights` method before using the `infer_auto_device` function.
+[2025-06-08 20:18:40,806][accelerate.utils.modeling][WARNING] - The model weights are not tied. Please use the `tie_weights` method before using the `infer_auto_device` function.
+Overall we have 790 games...
+Training with 790 games
+trainable params: 3407872 || all params: 752683008 || trainable%: 0.4527632434609179
+trainable params: 9705474 || all params: 1037504290 || trainable%: 0.9354635054087342
+[2025-06-08 20:18:50,202][lamorel_logger][INFO] - Launching LLM server process 1
+Overall we have 790 games...
+Training with 790 games
+Found path: /home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64
+Mono path[0] = '/home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Managed'
+Mono config path = '/home/bahaduri/.ai2thor/releases/thor-201909061227-Linux64/thor-201909061227-Linux64_Data/Mono/etc'
+Preloaded 'ScreenSelector.so'
+Display 0 'screen': 1024x768 (primary device).
+Logging to /home/bahaduri/.config/unity3d/Allen Institute for Artificial Intelligence/AI2-Thor/Player.log
+ThorEnv started.
+Resetting ThorEnv
+Task: put a candle in countertop
+Resetting ThorEnv
+Task: put a pillow in armchair
+Resetting ThorEnv
+Task: put some alarmclock on shelf
+Resetting ThorEnv
+Task: put a toiletpaper in shelf
+Resetting ThorEnv
+Task: put some laptop on desk
+Resetting ThorEnv
+Task: put some spraybottle on garbagecan
+Resetting ThorEnv
+Task: put a remotecontrol in armchair
+Resetting ThorEnv
+Task: put some dishsponge on cart
+PPO update number 1
+Update loss: 0.0007177822729204309
+Resetting ThorEnv
+Task: put some keychain on sofa
+Resetting ThorEnv
+Task: put a tomato in microwave
+Resetting ThorEnv
+Task: put a statue in coffeetable
+Resetting ThorEnv
+Task: put a newspaper in garbagecan
+Resetting ThorEnv
+Task: put a remotecontrol in sofa
+Resetting ThorEnv
+Task: put some kettle on cabinet
+Resetting ThorEnv
+Task: put some cellphone on drawer
+Resetting ThorEnv
+Task: put some spraybottle on countertop
+PPO update number 2
+Saving model...
+Model saved
+Update loss: 0.00025007445553683284
+Resetting ThorEnv
+Task: put a remotecontrol in ottoman
+Resetting ThorEnv
+Task: put some candle on countertop
+Resetting ThorEnv
+Task: put some book on sofa
+Resetting ThorEnv
+Task: put some creditcard on armchair
+Resetting ThorEnv
+Task: put a statue in coffeetable
+Resetting ThorEnv
+Task: put some tissuebox on sidetable
+Resetting ThorEnv
+Task: put some creditcard on armchair
+Resetting ThorEnv
+Task: put a pencil in sidetable
+PPO update number 3
+Saving model...
+Model saved
+Update loss: 8.972835317308636e-05
+Resetting ThorEnv
+Task: put a box in armchair
+Resetting ThorEnv
+Task: put some book on armchair
+Resetting ThorEnv
+Task: put a tomato in microwave
+Resetting ThorEnv
+Task: put a peppershaker in drawer
+Resetting ThorEnv
+Task: put some keychain on shelf
+Resetting ThorEnv
+Task: put a toiletpaper in garbagecan
+Resetting ThorEnv
+Task: put a pencil in desk
+PPO update number 4
+Saving model...
+Model saved
+Update loss: -0.0010828475402877302
+Resetting ThorEnv
+Task: put a keychain in shelf
+Resetting ThorEnv
+Task: put some alarmclock on desk
+Resetting ThorEnv
+Task: put a keychain in dresser
+Resetting ThorEnv
+Task: put a alarmclock in desk
+Resetting ThorEnv
+Task: put some pencil on shelf
+Resetting ThorEnv
+Task: put some soapbottle on garbagecan
+Resetting ThorEnv
+Task: put a peppershaker in countertop
+Resetting ThorEnv
+Task: put some candle on sidetable
+Resetting ThorEnv
+Task: put some creditcard on sofa
+PPO update number 5
+[1;34mwandb[0m: 
+[1;34mwandb[0m: You can sync this run to the cloud by running:
+[1;34mwandb[0m: [1mwandb sync /home/bahaduri/VIPER/outputs/2025-06-08/20-18-21/wandb/offline-run-20250608_201904-3p8g4sbe[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/offline-run-20250608_201904-3p8g4sbe/logs[0m

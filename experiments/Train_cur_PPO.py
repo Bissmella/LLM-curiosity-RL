@@ -612,7 +612,7 @@ def main(config_args):
             loading_path=loading_path,
         )
 
-        #TODO  update the temporal predictor model
+        #TODO  write the model info to a file
         #update
         if epoch > 0:
             temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].act_buf)

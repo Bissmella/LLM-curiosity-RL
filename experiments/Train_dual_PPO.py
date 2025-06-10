@@ -187,6 +187,7 @@ class PPOUpdater(BaseUpdater):
                         )
                         * current_process_buffer["advantages"][_start_idx:_stop_idx]
                     )
+                    #print("clip advantage: ", clip_adv)
                     policy_loss = -(
                         torch.min(
                             ratio
@@ -237,8 +238,11 @@ class PPOUpdater(BaseUpdater):
                         valueCur_loss = torch.max(unclipped_valueCur_error, clipped_valueCur_error).mean()
                     else:
                         # Important: requires_grad=True keeps the backward graph alive
-                        valueCur_loss = torch.tensor(0.0, device=values_cur.device, requires_grad=True)
-
+                        #valueCur_loss = torch.tensor(0.0, device=values_cur.device, requires_grad=True)
+                        #dummy = (values_cur * 0).sum() #values_cur.sum() * 0.0  # attaches to the value head's output
+                        valueCur_loss = torch.tensor(0.0, device=returns_cur.device)#dummy #+ torch.tensor(0.0, device=values_cur.device)
+                    # print("valueCur_loss", valueCur_loss)
+                    # print("policy loss: ", policy_loss)
                     # Logging and accumulation
                     epochs_losses["valueCur"].append(valueCur_loss.detach().cpu().item())
                     value_loss += valueCur_loss
@@ -459,6 +463,7 @@ def main(config_args):
             entropy = proba_dist.entropy().mean().item()
             history["entropy"].append(entropy)
             values = scores_stacking([_o["value"][0] for _o in output])
+            valuesCur = scores_stacking([_o["value_cur"][0] for _o in output])
             sampled_actions = proba_dist.sample()
             batch_size = sampled_actions.shape[0]
             num_actions = scores.shape[-1] 
@@ -519,6 +524,7 @@ def main(config_args):
                     s[i],
                     values[i],
                     log_probs[i],
+                    valuesCur[i],
                 )
                 ep_ret[i] += s[i]
 
@@ -647,7 +653,7 @@ def main(config_args):
         avg_loss = np.mean([_r["loss"] for _r in update_results])
         avg_policy_loss = np.mean([_r["policy_loss"] for _r in update_results])
         avg_value_loss = np.mean([_r["value_loss"] for _r in update_results])
-        avg_valueCur_loss = np.mean([_r["valueCur"] for _r in update_results])
+        avg_valueCur_loss = np.mean([_r["valueCur_loss"] for _r in update_results])
         history["loss"].append(avg_loss)
         history["policy_loss"].append(avg_policy_loss)
         history["value_loss"].append(avg_value_loss)

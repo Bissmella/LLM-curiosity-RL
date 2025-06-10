@@ -1,7 +1,7 @@
 TASK=$1
 OUTPUT_DIR=$2
 INTRINSIC_REWARD=True
-STARTEPOCHS=83
+STARTEPOCHS=0
 LOADING_PATH=""
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then

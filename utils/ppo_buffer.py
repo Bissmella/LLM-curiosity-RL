@@ -173,7 +173,7 @@ class PPOBufferAugmented:
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
-        if win:
+        if not win:
             cur_vals = np.append(self.valCur_buf[path_slice], last_curVal)
             if self.intrinsic_reward:
                 intrinsic_rews = np.array([
@@ -184,10 +184,15 @@ class PPOBufferAugmented:
                 # the next two lines implement GAE-Lambda advantage calculation
                 intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]
                 self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
+
+                # curiosity reward based on temporal predictability
+                goal = self.goal_buf[-1]   #goal string
+                actions = self.cmd_buf[path_slice]   #list of actions
+                #actions
                 #rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
         self.adv_buf[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
-        if win and self.intrinsic_reward and self.dualValue:
+        if not win and self.intrinsic_reward and self.dualValue:
             self.adv_buf[path_slice] += discount_cumsum(intrinsic_deltas, self.gamma * self.lam)
 
         # the next line computes rewards-to-go, to be targets for the value function

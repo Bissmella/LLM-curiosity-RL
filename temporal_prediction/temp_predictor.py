@@ -1,17 +1,34 @@
 from transformers import T5TokenizerFast, T5Model
-from transformers import T5ForConditionalGeneration, Trainer, TrainingArguments
+from transformers import T5ForConditionalGeneration, Trainer, TrainingArguments, T5Config
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.nn import CrossEntropyLoss
 from transformers import DataCollatorForSeq2Seq
 from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
+import warnings
 
 ALF_ACTION_LIST=["pass", "goto", "pick", "put", "open", "close", "toggle", "heat", "clean", "cool", "slice", "inventory", "examine", "look"]
 
+
+
+def dict_mean(dict_list):
+    mean_dict = {}
+    if len(dict_list) > 0:
+        for key in dict_list[0].keys():
+            if "min" in key:
+                mean_dict[key] = min(d[key] for d in dict_list)
+            elif "max" in key:
+                mean_dict[key] = max(d[key] for d in dict_list)
+            else:
+                mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+    return mean_dict
+
+
+
 class TempPredictorModel(T5ForConditionalGeneration):
-    def __init__(self, ):
-        super().__init__()
+    def __init__(self,  config: T5Config):
+        super().__init__(config)
 
     def forward(
         self,
@@ -147,14 +164,15 @@ class TempPredictorModel(T5ForConditionalGeneration):
             if loss_weights is not None:
                 loss_fct = CrossEntropyLoss(ignore_index=-100, reduction='none')
                 loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
-                loss = loss * loss_weights.view(-1)
-                loss = torch.mean(loss)
+                loss_raw = loss * loss_weights.view(-1)
+                loss = torch.mean(loss_raw)
             else:
                 loss_fct = CrossEntropyLoss(ignore_index=-100, reduction='none')
                 loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
+                loss_raw=None
             
             # TODO(thom): Add z_loss https://github.com/tensorflow/mesh/blob/fa19d69eafc9a482aff0b59ddd96b025c0cb207d/mesh_tensorflow/layers.py#L666
-            decoder_outputs = (loss,) + decoder_outputs
+            decoder_outputs = (loss,) + (loss_raw,) + decoder_outputs
 
         return decoder_outputs + encoder_outputs
 
@@ -203,12 +221,18 @@ class Temp_predictor():
         model = T5Model.from_pretrained("t5-small")
         """
         self.tokenizer = T5TokenizerFast.from_pretrained("t5-small")
-        self.model = T5ForConditionalGeneration.from_pretrained("t5-small")
+        config = T5Config.from_pretrained("t5-small")
+        self.model = TempPredictorModel(config)
+        #self.model = T5ForConditionalGeneration.from_pretrained("t5-small")
         self.temp_model_optimizer = torch.optim.Adam(self.model.parameters(), lr = temp_model_lr)
         self.device = device
         self.accelerator = accelerator
         self.epochs = epochs
-
+        self.act_sep_token = '<ACT_SEP>'  #special action seperator token
+        self.tokenizer.add_special_tokens({'act_token': self.act_sep_token})  #action seperator token
+        self.model.resize_token_embeddings(len(self.tokenizer))
+        self.act_sep_token_id = self.tokenizer.convert_tokens_to_ids(self.act_sep_token)
+        self.temp_model_optimizer = self.accelerator.prepare(self.temp_model_optimizer)
 
 
     def preprocess_trajectories(self, buffer_goals, buffer_trajLen, buffer_actions):
@@ -219,7 +243,7 @@ class Temp_predictor():
             input_seq.append(buffer_goals[i])
             acts = buffer_actions[counter: len]
             counter += len
-            flattened = ", ".join(acts)
+            flattened = f"{self.act_sep_token}".join(acts)
             target_seq.append(flattened)
         # input_seq= None
         # target_seq= None
@@ -257,9 +281,11 @@ class Temp_predictor():
         data_collator = CustomCollator(tokenizer=self.tokenizer, model=self.model)
         train_loader = DataLoader(dataset, batch_size=64, collate_fn=data_collator, shuffle=True)
         
-
+        train_loader = self.accelerator.prepare(train_loader)
+        info = {}
+        info_list = []
         for _ in tqdm(range(self.epochs)):
-            self.model.zero_grad()
+            self.temp_model_optimizer.zero_grad()
             epoch_loss= 0
             correct = 0
             total = 0
@@ -276,12 +302,27 @@ class Temp_predictor():
                                     # decoder_input_ids=labels_input_ids,
                                     # decoder_attention_mask=labels_attention_mask,
                                     )
-                loss, logits = outputs.loss, outputs.logits
+                breakpoint()
+                loss, logits = outputs[0], outputs[3]  #TODO  3 is placeholder for the logits #outputs.loss, outputs.logits
+                self.accelerator.backward(loss)
+                epoch_loss += loss.item()
+                preds = torch.argmax(logits, dim=-1)
+                mask = labels != -100
+                correct += ((preds == labels) & mask).sum().item()
+                total += mask.sum().item()
+            avg_epoch_loss = epoch_loss / len(train_loader)
+            train_accuracy = correct / total
+            info_list.append({"temp_predictor.loss": avg_epoch_loss, "temp_predictor.acc": train_accuracy})
+            self.accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+            self.temp_model_optimizer.step()
+
+        info.update(dict_mean(info_list))
+
 
             
 
 
-    def compute_novelty(self, sequence):
+    def eval_model(self, sequence):
         """
         To be used for both validation of the temporal predictor model and also for novelty score calculation.
         """
@@ -307,7 +348,7 @@ class Temp_predictor():
         model_inputs = self.assign_token_weights2([tgt for _, tgt in eval_data], model_inputs, token_offsets)
         eval_dataset = TrajectoryDataset(model_inputs)
         data_collator = CustomCollator(tokenizer=self.tokenizer, model=self.model)
-        eval_loader = DataLoader(eval_dataset, batch_size=64, collate_fn=data_collator, shuffle=True)
+        eval_loader = DataLoader(eval_dataset, batch_size=64, collate_fn=data_collator, shuffle=False)
         
         val_loss = 0
         correct = 0
@@ -334,10 +375,58 @@ class Temp_predictor():
                     total += mask.sum().item()
         avg_val_loss = val_loss/ len(eval_loader)
         val_accuracy = correct/total
-        #TODO
-        #novelty_scores
+        
+        #
         return loss   #higher = more novel
     
+    def compute_novelty(self, input, target):
+        """
+        computes novetly for one trajectory
+        input: a string, mainly the trajectory's goal
+        target: list of strings, mainly the trajectory's actions
+        """
+        self.model.eval()
+        target = f"{self.act_sep_token}".join(target)
+        model_inputs = self.tokenizer(
+            [input],
+            padding=False, #"max_length",
+            truncation=True,
+            #max_length=64,
+            return_tensors=None, #"pt"
+        )
+        labels = self.tokenizer(
+            [target],
+            return_offsets_mapping=True,
+            padding=False, #"max_length",
+            truncation=True,
+            #max_length=64,
+            return_tensors=None, #"pt"
+        )
+        
+        #creating slices of actions
+        act_sep_indices = [i for i, x in enumerate(labels["input_ids"]) if x == self.act_sep_token_id]
+        start_indices = [0] + [i + 1 for i in act_sep_indices]
+        end_indices = act_sep_indices + [len(labels["input_ids"])-1]
+        # Now pair them into slices
+        action_slices = [slice(start, end) for start, end in zip(start_indices, end_indices)]
+
+        token_offsets = labels["offset_mapping"]
+        model_inputs["labels"] = labels["input_ids"]
+        model_inputs = self.assign_token_weights2([target], model_inputs, token_offsets)
+        #TODO put a breakpoint here and check if no index [0] needed after the model_inputs
+        input_ids = model_inputs["input_ids"].to(self.device)
+        input_attention_mask = model_inputs['attention_mask'].to(self.device)
+        outputs = self.model(input_ids=input_ids,
+                                        attention_mask=input_attention_mask,
+                                        encoder_outputs=None,
+                                        # decoder_input_ids=labels_input_ids,
+                                        # decoder_attention_mask=labels_attention_mask,
+                                        )
+        loss_raw = outputs[1]
+        #TODO  normalize the loss_raw using min-max normalization
+        loss_sliced = [loss_raw[s] for s in action_slices]
+
+
     def assign_token_weights2(self, text, model_inputs, offsets):
         sentence_spans = []
         model_inputs['weights'] = []
