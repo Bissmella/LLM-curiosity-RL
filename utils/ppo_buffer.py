@@ -155,7 +155,7 @@ class PPOBufferAugmented:
         """
         self.goal_buf.append(goal)
         self.traj_lens.append(ep_len)
-    def finish_path(self, last_val=0, last_curVal=0, win=False):
+    def finish_path(self, last_val=0, last_curVal=0, win=False, cur_model=None):
         """
         Call this at the end of a trajectory, or when one gets cut off
         by an epoch ending. This looks back in the buffer to where the
@@ -186,8 +186,10 @@ class PPOBufferAugmented:
                 self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
 
                 # curiosity reward based on temporal predictability
-                goal = self.goal_buf[-1]   #goal string
-                actions = self.cmd_buf[path_slice]   #list of actions
+                if cur_model is not None:
+                    goal = self.goal_buf[-1]   #goal string
+                    actions = self.cmd_buf[path_slice]   #list of actions
+                    cur_reward = cur_model.compute_novelty(goal, actions)
                 #actions
                 #rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]

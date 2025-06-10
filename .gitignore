@@ -6,3 +6,5 @@ videos/
 outputs/
 weights/
 /pick_train_analysis*
+/pick_ppo*
+wandb/
