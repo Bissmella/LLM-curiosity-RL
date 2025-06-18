@@ -1,12 +1,12 @@
 TASK=1    #$1   #
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_3"  #$2         #
-INTRINSIC_REWARD=False
-DUAL_VAL=False
+OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_dual_3"  #$2         #
+INTRINSIC_REWARD=True
+DUAL_VAL=True
 INTRINSIC_DECAY=False
 STARTEPOCHS=0
 LOADING_PATH=""
 SEED=3
-WANDBRUN="LLM_3"
+WANDBRUN="LLM_dual_3"
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"

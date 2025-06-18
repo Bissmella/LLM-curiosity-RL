@@ -113,9 +113,11 @@ class PPOBufferAugmented:
     It is augmented with goals and trajectory lengths
     """
 
-    def __init__(self, size, gamma=0.99, lam=0.95, intrinsic_reward=False, dualValue=False):
+    def __init__(self, size, gamma=0.99, lam=0.95, intrinsic_reward=False, dualValue=False, intrinsic_decay=False, intrinsic_decay_scale=40):
         self.intrinsic_reward= intrinsic_reward    #Use intrinsic reward based on novelty of actions
         self.dualValue = dualValue
+        self.intrinsic_decay = intrinsic_decay
+        self.intrinsic_decay_scale = intrinsic_decay_scale
         self.obs_buf = [None for _ in range(size)]
         self.possible_act_buf = [None for _ in range(size)]
         self.goal_buf = []
@@ -151,11 +153,12 @@ class PPOBufferAugmented:
 
     def store_goal(self, goal, ep_len):
         """
-        
+        goal: trajectory goal, string
+        ep_len: episode length, int
         """
         self.goal_buf.append(goal)
         self.traj_lens.append(ep_len)
-    def finish_path(self, last_val=0, last_curVal=0, win=False, cur_model=None):
+    def finish_path(self, last_val=0, last_curVal=0, win=False, epoch=0, cur_model=None):
         """
         Call this at the end of a trajectory, or when one gets cut off
         by an epoch ending. This looks back in the buffer to where the
@@ -177,19 +180,28 @@ class PPOBufferAugmented:
             cur_vals = np.append(self.valCur_buf[path_slice], last_curVal)
             if self.intrinsic_reward:
                 intrinsic_rews = np.array([
-                                            self.compute_intrinsic_reward(self.cmd_buf[i])
+                                            self.compute_intrinsic_reward(self.cmd_buf[i], scale=0.0096) #TODO hardcoded coefficient
                                             for i in range(self.path_start_idx, self.ptr)
                                         ])
                 intrinsic_rews = np.append(intrinsic_rews, 0)
-                # the next two lines implement GAE-Lambda advantage calculation
-                intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]
-                self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
-
                 # curiosity reward based on temporal predictability
                 if cur_model is not None:
                     goal = self.goal_buf[-1]   #goal string
                     actions = self.cmd_buf[path_slice]   #list of actions
-                    cur_reward = cur_model.compute_novelty(goal, actions)
+                    cur_reward = cur_model.compute_novelty(goal, actions) * 0.006#TODO hardcoded coefficient
+                    intrinsic_rews[:-1] += cur_reward   #cur_reward is one element less  
+                #intrinsic_rews = intrinsic_rews * (40 / (40 + epoch))
+                # the next two lines implement GAE-Lambda advantage calculation
+                intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]
+                if self.intrinsic_decay:
+                    if epoch < 40:
+                        decay_factor = 1
+                    else:
+                        decay_factor = self.intrinsic_decay_scale/ (self.intrinsic_decay_scale + epoch)
+                    intrinsic_deltas = intrinsic_deltas * decay_factor
+                self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
+
+                
                 #actions
                 #rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]

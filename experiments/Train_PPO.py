@@ -152,6 +152,7 @@ class PPOUpdater(BaseUpdater):
                     else:
                         _batch_size = self._gradient_minibatch_size
                     # Use LLM to compute again action probabilities and value
+                    # try:
                     output = self._llm_module(
                         ["score", "value"],
                         contexts=_contexts,
@@ -159,6 +160,7 @@ class PPOUpdater(BaseUpdater):
                         require_grad=True,
                         minibatch_size=_batch_size,
                     )
+                    
                     scores = scores_stacking([_o["score"] for _o in output])
                     # print(scores,"\n\n\n\n\n")
                     probas = torch.distributions.Categorical(logits=scores)
@@ -229,12 +231,16 @@ class PPOUpdater(BaseUpdater):
 
                     # Backward
                     loss.backward()
+                    del output, scores, probas, values, loss
+                    torch.cuda.empty_cache()
+                    gc.collect()
                 torch.nn.utils.clip_grad_norm_(
                     self._iterator_trainable_params, kwargs["max_grad_norm"]
                 )
                 self.optimizer.step()
                 torch.cuda.empty_cache()
                 gc.collect()
+                
 
         if kwargs["save_after_update"] and accelerator.process_index == 1:
             print("Saving model...")
@@ -516,7 +522,7 @@ def main(config_args):
             
             for env_id in range(len(d)):
               if d[env_id]:
-                o, infos = train_env.reset(env_id=env_id)
+                o, infos = train_env.reset()#env_id=env_id)  env_id is required in the thor environment
                 not_saved = [
                     True for _ in range(config_args.rl_script_args.number_envs)
                 ]
@@ -627,6 +633,13 @@ def main(config_args):
         )
         history["prompts"].extend(collected_trajectories["obs"])
         print(f"Update loss: {avg_loss}")
+        success_rate = [1 if _ret > 1 else 0 for _ret in history["ep_ret"]]
+        avg_success_rate = np.mean(success_rate)
+        #breakpoint()
+        info = {"loss": avg_loss, "policy_loss": avg_policy_loss, "value_loss": avg_value_loss, "SR": avg_success_rate}
+        # if temp_info is not None:
+        #     info.update(temp_info)
+        wandb.log(info)
 
         if save_model_and_history:
             # Save history

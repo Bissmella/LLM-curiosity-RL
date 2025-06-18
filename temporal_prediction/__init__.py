@@ -1,1 +1,1 @@
-from  temp_predictor import *
+from  .temp_predictor import *

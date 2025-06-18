@@ -21,6 +21,7 @@ from typing import List
 from torch.nn.functional import log_softmax
 import hydra
 from utils import *
+from temporal_prediction import *
 import torch
 import bitsandbytes
 import numpy as np
@@ -227,11 +228,15 @@ class PPOUpdater(BaseUpdater):
 
                         unclipped_valueCur_error = (values_cur_valid - returns_cur_valid) ** 2
 
-                        clipped_valuesCur = returns_cur_valid + torch.clamp(
-                            values_cur_valid - returns_cur_valid,
-                            -kwargs["clip_eps"],
-                            kwargs["clip_eps"]
-                        )
+                        clipped_valuesCur = current_process_buffer["values_cur"][_start_idx:_stop_idx][mask] + torch.clamp(
+                                           values_cur_valid - current_process_buffer["values_cur"][_start_idx:_stop_idx][mask], 
+                                           -kwargs["clip_eps"],
+                                            kwargs["clip_eps"])
+                        # returns_cur_valid + torch.clamp(
+                        #     values_cur_valid - returns_cur_valid,
+                        #     -kwargs["clip_eps"],
+                        #     kwargs["clip_eps"]
+                        # )
 
                         clipped_valueCur_error = (clipped_valuesCur - returns_cur_valid) ** 2
 
@@ -364,6 +369,10 @@ def main(config_args):
 
     caller_devices = lm_server.accelerator.device
     print("here!", caller_devices)
+    
+    #temporal predictor for action sequence novelty
+    temporal_predictor = Temp_predictor(device=torch.device("cuda:0"))
+    #temporal_predictor = None
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()
@@ -372,19 +381,31 @@ def main(config_args):
     env = getattr(environment, config_args.rl_script_args.name_environment)(config)
     train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
     # init wandb
-    wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
+    wandb.init(project=config_args.wandb_args.project,name=config_args.wandb_args.run) #, mode=config_args.wandb_args.mode
     # Set up experience buffer
-    buffers = [
-        PPOBufferAugmented(
-            config_args.rl_script_args.steps_per_epoch
-            // config_args.rl_script_args.number_envs,
-            config_args.rl_script_args.gamma,
-            config_args.rl_script_args.lam,
-            config_args.rl_script_args.intrinsic_reward,
-            dualValue=True
-        )
-        for _ in range(config_args.rl_script_args.number_envs)
-    ]
+    if config_args.rl_script_args.intrinsic_reward:
+        buffers = [
+            PPOBufferAugmented(
+                config_args.rl_script_args.steps_per_epoch
+                // config_args.rl_script_args.number_envs,
+                config_args.rl_script_args.gamma,
+                config_args.rl_script_args.lam,
+                config_args.rl_script_args.intrinsic_reward,
+                dualValue=config_args.rl_script_args.dual_val,
+                intrinsic_decay=config_args.rl_script_args.intrinsic_decay,
+            )
+            for _ in range(config_args.rl_script_args.number_envs)
+        ]
+    else:
+        buffers = [
+            PPOBufferAugmented(
+                config_args.rl_script_args.steps_per_epoch
+                // config_args.rl_script_args.number_envs,
+                config_args.rl_script_args.gamma,
+                config_args.rl_script_args.lam,
+            )
+            for _ in range(config_args.rl_script_args.number_envs)
+        ]
 
     # Prepare for interaction with environment
     (o, infos), ep_ret, ep_len = (
@@ -532,6 +553,8 @@ def main(config_args):
                 timeout = ep_len[i] == config_args.rl_script_args.max_ep_len
                 terminal = d[i] or timeout
                 if terminal or epoch_ended:
+                    if config_args.rl_script_args.intrinsic_reward:
+                        buffers[i].store_goal(infos[i]["goal"], ep_len[i])  #storing goal and episode length to the buffers for curiosity reward calculation
                     if not terminal:
                         bootstrap_dict["ids"].append(i)
                         bootstrap_dict["contexts"].append(
@@ -540,12 +563,12 @@ def main(config_args):
                         )
                     else:
                         if not_saved[i]:
-                            wandb.log({"succes rate": ep_ret[i]})
+                            #wandb.log({"succes rate": ep_ret[i]})
                             history["ep_len"].append(ep_len[i])
                             history["ep_ret"].append(ep_ret[i])
                             history["goal"].append(infos[i]["goal"])
                             not_saved[i] = False
-                        buffers[i].finish_path(0, 0, s[i]==1)
+                        buffers[i].finish_path(0, 0, s[i]==1, epoch= epoch, cur_model=temporal_predictor)
 
                         # history["ep_len"].append(ep_len[i])
                         # history["ep_ret"].append(ep_ret[i])
@@ -597,7 +620,7 @@ def main(config_args):
                 )
                 for _i in range(len(output)):
                     buffers[bootstrap_dict["ids"][_i]].finish_path(
-                        output[_i]["value"][0], output[_i]["value_cur"][0], s[0]==1
+                        output[_i]["value"][0], output[_i]["value_cur"][0], s[0]==1, epoch= epoch, cur_model=temporal_predictor
                     )
 
         # Perform PPO update!
@@ -627,7 +650,10 @@ def main(config_args):
             else list(f.reduce(add, [traj[k] for traj in trajectories]))
             for k, _ in trajectories[0].items()
         }
-
+        #TODO line below only for debugging and testing
+        temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].cmd_buf)
+        print(temp_info)
+        
         update_results = lm_server.update(
             collected_trajectories["obs"],
             collected_trajectories["possible_act"],
@@ -650,6 +676,14 @@ def main(config_args):
             loading_path=loading_path,
         )
 
+
+        #TODO  write the model info to a file
+        #update
+        if temporal_predictor is not None and epoch > 0:
+            temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].cmd_buf)
+        else:
+            temp_info = None
+
         avg_loss = np.mean([_r["loss"] for _r in update_results])
         avg_policy_loss = np.mean([_r["policy_loss"] for _r in update_results])
         avg_value_loss = np.mean([_r["value_loss"] for _r in update_results])
@@ -670,6 +704,12 @@ def main(config_args):
         )
         history["prompts"].extend(collected_trajectories["obs"])
         print(f"Update loss: {avg_loss}")
+        success_rate = [1 if _ret > 1 else 0 for _ret in history["ep_ret"]]
+        avg_success_rate = np.mean(success_rate)
+        info = {"loss": avg_loss, "policy_loss": avg_policy_loss, "value_loss": avg_value_loss, "valueCur_loss": avg_valueCur_loss, "SR": avg_success_rate}
+        if temp_info is not None:
+            info.update(temp_info)
+        wandb.log(info)
 
         if save_model_and_history:
             # Save history

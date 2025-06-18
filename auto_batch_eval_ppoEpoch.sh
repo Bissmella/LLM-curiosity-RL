@@ -26,9 +26,9 @@ for MODEL in "${MODELS[@]}"; do
         RESULTS_FILE="/home/bahaduri/VIPER/outputs/ppo_train/pick_results_llm.txt"
     fi
     if [[ "$MODEL" == "intrinsic" ]]; then
-        output_dir="/home/bahaduri/VIPER/outputs/ppo_llm_wIntrinsic_pick"
+        output_dir="/home/bahaduri/VIPER/outputs/ppo_llm_wIntrinsic_40gam_dual_pick"
         epoch_dirs=($(find "$output_dir" -mindepth 1 -maxdepth 1 -type d | sort -V))
-        RESULTS_FILE="/home/bahaduri/VIPER/outputs/ppo_train/pick_results_intrinsic.txt"
+        RESULTS_FILE="/home/bahaduri/VIPER/outputs/ppo_train/pick_results_intrinsic_dual_40gam.txt"
     fi
     count=0
     for dir in "${epoch_dirs[@]}"; do
