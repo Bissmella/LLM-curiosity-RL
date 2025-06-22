@@ -8,8 +8,10 @@ from tqdm import tqdm
 from torch.nn.utils.rnn import pad_sequence
 import warnings
 import numpy as np
+import gc
 from transformers.modeling_outputs import Seq2SeqLMOutput, BaseModelOutput
 from typing import List, Optional, Tuple, Union
+from collections import deque
 ALF_ACTION_LIST=["pass", "goto", "pick", "put", "open", "close", "toggle", "heat", "clean", "cool", "slice", "inventory", "examine", "look"]
 
 
@@ -423,7 +425,7 @@ class CustomCollator:
 
 
 class Temp_predictor():
-    def __init__(self, device, epochs=3, temp_model_lr=3e-4, ):
+    def __init__(self, device, epochs=4, temp_model_lr=3e-4, buff_size=160):
 
         """
         tokenizer = T5Tokenizer.from_pretrained("t5-small")
@@ -445,20 +447,25 @@ class Temp_predictor():
         #self.temp_model_optimizer = self.accelerator.prepare(self.temp_model_optimizer)
         self.model.to(self.device)
 
+        #trajectories buffer
+        self.input_seq_buffer = deque(maxlen=buff_size)
+        self.target_seq_buffer = deque(maxlen=buff_size)
 
-    def preprocess_trajectories(self, buffer_goals, buffer_trajLen, buffer_actions):
+
+    def preprocess_trajectories(self, buffer_goals, buffer_trajLen, buffer_actions, terminals):
         input_seq = []
         target_seq = []
         counter =0
         for i, len in enumerate(buffer_trajLen):
-            input_seq.append(buffer_goals[i])
             acts = buffer_actions[counter: len]
             counter += len
-            flattened = f" {self.act_sep_token} ".join(acts)
-            target_seq.append(flattened)
+            if terminals[i]:
+                self.input_seq_buffer.append(buffer_goals[i])
+                flattened = f" {self.act_sep_token} ".join(acts)
+                self.target_seq_buffer.append(flattened)
         # input_seq= None
         # target_seq= None
-        return input_seq, target_seq
+        return list(self.input_seq_buffer), list(self.target_seq_buffer)
     
     def preprocess_data(self, examples):
         model_inputs = self.tokenizer(examples["input"], truncation=True, padding=False)
@@ -466,10 +473,9 @@ class Temp_predictor():
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs, labels["offset_mapping"]
 
-    def update_model(self, buffer_goals, buffer_trajLen, buffer_actions):
+    def update_model(self, buffer_goals, buffer_trajLen, buffer_actions, terminals):
         self.model.train()
-        input_seq, target_seq = self.preprocess_trajectories(buffer_goals, buffer_trajLen, buffer_actions) #train_data
-        
+        input_seq, target_seq = self.preprocess_trajectories(buffer_goals, buffer_trajLen, buffer_actions, terminals) #train_data
         model_inputs = self.tokenizer(
             input_seq, #[inp for inp, _ in train_data],
             padding=False, #"max_length",
@@ -529,6 +535,8 @@ class Temp_predictor():
             #self.accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
             #torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
             self.temp_model_optimizer.step()
+            torch.cuda.empty_cache()
+            gc.collect()
 
         info.update(dict_mean(info_list))
         return info

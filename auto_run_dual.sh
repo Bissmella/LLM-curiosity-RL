@@ -1,12 +1,13 @@
-TASK=1    #$1   #
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_dual_3"  #$2         #
+SEED=$1
+WANDBRUN=$2           #"LLM_dual_2"
+OUTPUT_DIR=$3   #"/home/bahaduri/VIPER/outputs/LLM_dual_2"  #$2  
+TASK=1    #$1   #       #
 INTRINSIC_REWARD=True
 DUAL_VAL=True
 INTRINSIC_DECAY=False
 STARTEPOCHS=0
-LOADING_PATH=""
-SEED=3
-WANDBRUN="LLM_dual_3"
+LOADING_PATH=""    #"/home/bahaduri/VIPER/outputs/LLM_dual_3/epochs_65-66"
+
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
@@ -18,13 +19,14 @@ fi
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_PPO.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_dual_PPO.py" \
     rl_script_args.output_dir=.  \
+    lamorel_args.allow_subgraph_use_whith_gradient=True \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
     lamorel_args.llm_args.model_type="causal" \
     lamorel_args.llm_args.minibatch_size=128 \
-    rl_script_args.minibatch_size=164 \
+    rl_script_args.minibatch_size=250 \
     rl_script_args.seed="$SEED" \
     rl_script_args.epochs=150 \
     rl_script_args.number_envs=1 \
@@ -35,7 +37,7 @@ python3 -m lamorel_launcher.launch \
     rl_script_args.intrinsic_decay="$INTRINSIC_DECAY" \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run="$WANDBRUN" \
-    wandb_args.mode="offline" \
+    wandb_args.mode="online" \
     lamorel_args.distributed_setup_args.n_llm_processes=1 \
     rl_script_args.transitions_buffer_len=5 \
     rl_script_args.gradient_batch_size=2 \

@@ -120,8 +120,9 @@ class PPOBufferAugmented:
         self.intrinsic_decay_scale = intrinsic_decay_scale
         self.obs_buf = [None for _ in range(size)]
         self.possible_act_buf = [None for _ in range(size)]
-        self.goal_buf = []
-        self.traj_lens = []
+        self.goal_buf = []#[None for _ in range(size)]
+        self.traj_lens = []#[None for _ in range(size)]
+        self.terminals = []#[None for _ in range(size)]
         self.cmd_buf = [None for _ in range(size)]
         self.act_buf = np.zeros(size, dtype=np.float32)
         self.adv_buf = np.zeros(size, dtype=np.float32)
@@ -151,13 +152,19 @@ class PPOBufferAugmented:
             self.valCur_buf[self.ptr] = val_cur
         self.ptr += 1
 
-    def store_goal(self, goal, ep_len):
+    def store_goal(self, goal, ep_len, ter=None):
         """
         goal: trajectory goal, string
         ep_len: episode length, int
         """
         self.goal_buf.append(goal)
         self.traj_lens.append(ep_len)
+        if ter is not None:
+            self.terminals.append(ter)
+    def reset_goal(self):
+        self.goal_buf=[]
+        self.traj_lens=[]
+        self.terminals=[]
     def finish_path(self, last_val=0, last_curVal=0, win=False, epoch=0, cur_model=None):
         """
         Call this at the end of a trajectory, or when one gets cut off

@@ -1,16 +1,20 @@
 TASK=$1
 USE_VLM=$2
 MODEL_PATH=$3
-LOG_PATH=$4
-RESULTS_FILE=$5
-TASK_NAME=$6
-JSON_PATH=$7
+RESULTS_FILE=$4
+TASK_NAME=$5
+PORT=$6
+LOG_PATH=$7
+JSON_PATH=""
+
 
 #create log_path if not existing
 if [ ! -d "$LOG_PATH" ]; then
     mkdir -p "$LOG_PATH"
     echo "Created directory: $LOG_PATH"
 fi
+
+#lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \
 
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
@@ -20,18 +24,18 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
     lamorel_args.llm_args.model_type="causal" \
+    lamorel_args.accelerate_args.main_process_port="$PORT" \
     rl_script_args.seed=3 \
     rl_script_args.number_envs=1 \
     rl_script_args.task="[$TASK]" \
     lamorel_args.config_alfred="/home/bahaduri/VIPER/alfworld/configs/base_config.yaml" \
     wandb_args.run=Examine_in_light \
-    lamorel_args.llm_args.vlm_model_path="microsoft/Florence-2-base-ft" \
     wandb_args.mode="offline" \
     lamorel_args.distributed_setup_args.n_llm_processes=1 \
     rl_script_args.transitions_buffer_len=5 \
     rl_script_args.epochs=500 \
     rl_script_args.gradient_batch_size=2 \
-    rl_script_args.name_environment="AlfredThorEnv" \
+    rl_script_args.name_environment="AlfredTWEnv" \
     rl_script_args.startepochs=0 \
     rl_script_args.loading_path="$MODEL_PATH"\
     eval_configs.use_vlm="$USE_VLM" \

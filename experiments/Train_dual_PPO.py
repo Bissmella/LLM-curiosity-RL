@@ -371,8 +371,10 @@ def main(config_args):
     print("here!", caller_devices)
     
     #temporal predictor for action sequence novelty
-    temporal_predictor = Temp_predictor(device=torch.device("cuda:0"))
-    #temporal_predictor = None
+    if config_args.rl_script_args.temp_pred:
+        temporal_predictor = Temp_predictor(device=torch.device("cuda:0"))
+    else:
+        temporal_predictor = None
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()
@@ -381,7 +383,7 @@ def main(config_args):
     env = getattr(environment, config_args.rl_script_args.name_environment)(config)
     train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
     # init wandb
-    wandb.init(project=config_args.wandb_args.project,name=config_args.wandb_args.run) #, mode=config_args.wandb_args.mode
+    wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode, name=config_args.wandb_args.run) #, mode=config_args.wandb_args.mode
     # Set up experience buffer
     if config_args.rl_script_args.intrinsic_reward:
         buffers = [
@@ -554,7 +556,7 @@ def main(config_args):
                 terminal = d[i] or timeout
                 if terminal or epoch_ended:
                     if config_args.rl_script_args.intrinsic_reward:
-                        buffers[i].store_goal(infos[i]["goal"], ep_len[i])  #storing goal and episode length to the buffers for curiosity reward calculation
+                        buffers[i].store_goal(infos[i]["goal"], ep_len[i], terminal)  #storing goal and episode length and terminal to the buffers for curiosity reward calculation
                     if not terminal:
                         bootstrap_dict["ids"].append(i)
                         bootstrap_dict["contexts"].append(
@@ -578,7 +580,7 @@ def main(config_args):
             
             for env_id in range(len(d)):
               if d[env_id]:
-                o, infos = train_env.reset(env_id=env_id)
+                o, infos = train_env.reset()### env_id=env_id)   env_id only for thor environment
                 not_saved = [
                     True for _ in range(config_args.rl_script_args.number_envs)
                 ]
@@ -651,8 +653,9 @@ def main(config_args):
             for k, _ in trajectories[0].items()
         }
         #TODO line below only for debugging and testing
-        temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].cmd_buf)
-        print(temp_info)
+        # if temporal_predictor is not None:
+        #     temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].cmd_buf)
+        #     print(temp_info)
         
         update_results = lm_server.update(
             collected_trajectories["obs"],
@@ -679,8 +682,9 @@ def main(config_args):
 
         #TODO  write the model info to a file
         #update
-        if temporal_predictor is not None and epoch > 0:
-            temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].cmd_buf)
+        if temporal_predictor is not None:# and epoch > 0: #TODO  buffers and number of environments should be only 1
+            temp_info = temporal_predictor.update_model(buffers[0].goal_buf, buffers[0].traj_lens, buffers[0].cmd_buf, buffers[0].terminals)
+            buffers[i].reset_goal()
         else:
             temp_info = None
 

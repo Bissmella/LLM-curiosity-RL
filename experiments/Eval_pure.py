@@ -422,7 +422,7 @@ def main(config_args):
             infos["description"]=[]
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]
             for _i in range(config_args.rl_script_args.number_envs):
-                    if config_args.eval_configs.use_vlm:
+                    if config_args.eval_configs.use_vlm or config_args.rl_script_args.name_environment=='AlfredTWEnv':
                         try:
                             infos["description"].append([description[_i]['text'].split("Assistant:")[-1]]) #TODO modified and added ['text'] # ['This is an animated image containing some objects.'])#
                         except:
@@ -451,7 +451,8 @@ def main(config_args):
             prompts = [               prompt_maker({"info":_i,"transition_buffer":_o},config_args.rl_script_args.prompt_element,config_args.rl_script_args.transitions_buffer_len) for _i, _o in zip(infos, transitions_buffer)
             ]
             promptsave.append(prompts[0])
-            imagessave.append(cv2.cvtColor(train_env.get_frames()[0,:,:,:], cv2.COLOR_BGR2RGB))
+            if config_args.rl_script_args.name_environment!="AlfredTWEnv":
+                imagessave.append(cv2.cvtColor(train_env.get_frames()[0,:,:,:], cv2.COLOR_BGR2RGB))
 
             
             
@@ -507,8 +508,8 @@ def main(config_args):
                     )
             # print(transitions_buffer)
             o, r, d, infos = train_env.step(actions_command)
-            gt_obs = [o[_i] for i in range(len(o))]  #ground truth textual observations for analysis
-            env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)] #ground truth objects info for analysis
+            gt_obs = [o[_i] for _i in range(len(o))]  #ground truth textual observations for analysis
+            #env_object_info = [infos.get('extra.object_info', {})[_i] for _i in range(config_args.rl_script_args.number_envs)] #ground truth objects info for analysis
             #print(r,d)
             if config_args.rl_script_args.name_environment=='AlfredTWEnv':  
                 infos["goal"] = _goal
@@ -528,7 +529,7 @@ def main(config_args):
                     description = lm_server.generate(contexts=_frames,prompts=vlm_prompt)
                 infos["description"]=[]
                 for _i in range(config_args.rl_script_args.number_envs):
-                    if config_args.eval_configs.use_vlm:
+                    if config_args.eval_configs.use_vlm or config_args.rl_script_args.name_environment=='AlfredTWEnv':
                         try:
                             infos["description"].append([description[_i].split("Assistant:")[-1]]) #['This is an animated image containing some objects.'])#
                         except:
@@ -555,7 +556,7 @@ def main(config_args):
         print(f"Succeed task | {_goal} | current RS | {np.mean(success)} current eplen | {np.mean(eplen)}")
         
         print("wait 5sec")
-        if config_args.eval_configs.log_path:
+        if config_args.eval_configs.log_path and config_args.eval_configs.json_file_path:
             p=f"{config_args.eval_configs.log_path}/_{i}_{_goal[0]}{int(np.mean(success)*100)}"
             if not os.path.exists(p):
                 os.mkdir(p)

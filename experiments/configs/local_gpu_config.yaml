@@ -79,6 +79,7 @@ rl_script_args:
   ## reward
   intrinsic_reward: False
   intrinsic_decay: False
+  temp_pred: False
   ## value
   dual_val: False
 wandb_args:
