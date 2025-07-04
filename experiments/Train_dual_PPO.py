@@ -322,12 +322,15 @@ def main(config_args):
     np.random.seed(seed)
     set_seed(seed)
     
+    print(f"Hydra Output directory  : {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}")
     # init env
     
     
     # Create LLM agent
     warnings.filterwarnings("ignore")
     config_args.lamorel_args.llm_args.use_vllm= config_args.rl_script_args.name_environment!='AlfredTWEnv'
+    if config_args.rl_script_args.loading_path == "":
+        config_args.rl_script_args.loading_path = None
     lm_server = Caller(
         config_args.lamorel_args,
         custom_updater=PPOUpdater(
@@ -382,6 +385,7 @@ def main(config_args):
     config["env"]["task_types"]=config_args.rl_script_args.task
     env = getattr(environment, config_args.rl_script_args.name_environment)(config)
     train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
+    train_env.seed(seed)
     # init wandb
     wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode, name=config_args.wandb_args.run) #, mode=config_args.wandb_args.mode
     # Set up experience buffer
@@ -684,6 +688,7 @@ def main(config_args):
         #update
         if temporal_predictor is not None:# and epoch > 0: #TODO  buffers and number of environments should be only 1
             temp_info = temporal_predictor.update_model(buffers[0].goal_buf, buffers[0].traj_lens, buffers[0].cmd_buf, buffers[0].terminals)
+            wandb.log(temp_info)
             buffers[i].reset_goal()
         else:
             temp_info = None

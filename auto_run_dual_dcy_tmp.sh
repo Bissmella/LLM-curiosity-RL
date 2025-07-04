@@ -5,7 +5,7 @@ PORT=$4
 TASK=1    #$1   #       #
 INTRINSIC_REWARD=True
 DUAL_VAL=True
-INTRINSIC_DECAY=True
+INTRINSIC_DECAY=False
 TEMP_PRED=True
 STARTEPOCHS=0   #78
 LOADING_PATH=""   #"/home/bahaduri/VIPER/outputs/LLM_dual_dcy_tmp_3/epochs_76-77"
@@ -29,7 +29,7 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.llm_args.model_type="causal" \
     lamorel_args.accelerate_args.main_process_port="$PORT" \
     lamorel_args.llm_args.minibatch_size=128 \
-    rl_script_args.minibatch_size=96 \
+    rl_script_args.minibatch_size=164 \
     rl_script_args.seed="$SEED" \
     rl_script_args.epochs=150 \
     rl_script_args.number_envs=1 \

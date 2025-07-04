@@ -60,9 +60,10 @@ import yaml
 import torch.distributed as dist
 
 #TODO   SENSITIVE HERE!!!!!!11
-from huggingface_hub import login
-login("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")
-
+# from huggingface_hub import login
+# login()#"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")
+import os
+os.environ["HUGGINGFACE_HUB_TOKEN"] ="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"
 """
 evaluates and stores evaluation details in json if path provided, stores images and textual details in log_path if exists
 uses VLM for textual description if use_vlm is True otherwise uses a fake description
@@ -391,6 +392,7 @@ def main(config_args):
             traj = [{} for _ in range(config_args.rl_script_args.number_envs)] # trajectory full info for analysis
         if config_args.rl_script_args.name_environment=='AlfredTWEnv':
             train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs,game_files=files[i*jump:(i+1)*jump])
+            train_env.seed(seed)
             (o, infos), ep_ret, ep_len = ( train_env.reset(),[0 for _ in range(config_args.rl_script_args.number_envs)],[0 for _ in range(config_args.rl_script_args.number_envs)],)
             
             infos["goal"] = [o[__i].split("\n\n")[-1] for __i in range(len(o))]

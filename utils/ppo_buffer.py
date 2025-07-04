@@ -183,11 +183,15 @@ class PPOBufferAugmented:
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
+        if cur_model is None:
+            scale = 0.0096
+        else:
+            scale = 0.006
         if not win:
             cur_vals = np.append(self.valCur_buf[path_slice], last_curVal)
             if self.intrinsic_reward:
                 intrinsic_rews = np.array([
-                                            self.compute_intrinsic_reward(self.cmd_buf[i], scale=0.0096) #TODO hardcoded coefficient
+                                            self.compute_intrinsic_reward(self.cmd_buf[i], scale=scale) #TODO hardcoded coefficient
                                             for i in range(self.path_start_idx, self.ptr)
                                         ])
                 intrinsic_rews = np.append(intrinsic_rews, 0)
@@ -196,7 +200,12 @@ class PPOBufferAugmented:
                     goal = self.goal_buf[-1]   #goal string
                     actions = self.cmd_buf[path_slice]   #list of actions
                     cur_reward = cur_model.compute_novelty(goal, actions) * 0.006#TODO hardcoded coefficient
-                    intrinsic_rews[:-1] += cur_reward   #cur_reward is one element less  
+                    try:
+                        intrinsic_rews[:-1] += cur_reward   #cur_reward is one element less
+                    except:
+                        print("Error occurred! Goal:", goal)
+                        print("Actions:", actions)
+                
                 #intrinsic_rews = intrinsic_rews * (40 / (40 + epoch))
                 # the next two lines implement GAE-Lambda advantage calculation
                 intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]

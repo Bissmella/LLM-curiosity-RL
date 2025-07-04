@@ -1,12 +1,13 @@
+SEED=$1              #2
+WANDBRUN=$2        #"LLM_2"
+OUTPUT_DIR=$3      #"/home/bahaduri/VIPER/outputs/LLM_2"  #$2         #
+PORT=$4                   #12355                #$4
 TASK=1    #$1   #
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_2"  #$2         #
 INTRINSIC_REWARD=False
 DUAL_VAL=False
 INTRINSIC_DECAY=False
-STARTEPOCHS=81
-LOADING_PATH="/home/bahaduri/VIPER/outputs/LLM_2/epochs_79-80"
-SEED=2
-WANDBRUN="LLM_2"
+STARTEPOCHS=0
+LOADING_PATH=""
 
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
@@ -24,8 +25,9 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \
     lamorel_args.llm_args.model_type="causal" \
-    lamorel_args.llm_args.minibatch_size=128 \
-    rl_script_args.minibatch_size=64 \
+    lamorel_args.llm_args.minibatch_size=164 \
+    rl_script_args.minibatch_size=164 \
+    lamorel_args.accelerate_args.main_process_port="$PORT" \
     rl_script_args.seed="$SEED" \
     rl_script_args.epochs=150 \
     rl_script_args.number_envs=1 \

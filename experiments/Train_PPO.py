@@ -20,6 +20,7 @@ from collections import OrderedDict
 from typing import List
 from torch.nn.functional import log_softmax
 import hydra
+from hydra.core.hydra_config import HydraConfig
 from utils import *
 import torch
 import bitsandbytes
@@ -291,12 +292,16 @@ def main(config_args):
     np.random.seed(seed)
     set_seed(seed)
     
+    print(f"Hydra Output directory  : {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}")
+
     # init env
     
     
     # Create LLM agent
     warnings.filterwarnings("ignore")
     config_args.lamorel_args.llm_args.use_vllm= config_args.rl_script_args.name_environment!='AlfredTWEnv'
+    if config_args.rl_script_args.loading_path == "":
+        config_args.rl_script_args.loading_path = None
     lm_server = Caller(
         config_args.lamorel_args,
         custom_updater=PPOUpdater(
@@ -341,6 +346,7 @@ def main(config_args):
     config["env"]["task_types"]=config_args.rl_script_args.task
     env = getattr(environment, config_args.rl_script_args.name_environment)(config)
     train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
+    train_env.seed(seed)
     # init wandb
     wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
     # Set up experience buffer

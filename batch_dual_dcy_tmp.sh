@@ -16,6 +16,6 @@ cd /home/bahaduri/VIPER
 conda activate viper2
 SEED=1
 WANDBRUN="LLM_dual_dcy_tmp_1"
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_dual_dcy_tmp_1_2"  #$2
+OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_dual_dcy_tmp_1"  #$2
 PORT=12337
 bash auto_run_dual_dcy_tmp.sh "$SEED" "$WANDBRUN" "$OUTPUT_DIR" "$PORT"

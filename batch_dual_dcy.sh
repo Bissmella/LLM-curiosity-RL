@@ -1,5 +1,6 @@
 #!/bin/bash
-#SBATCH --partition=electronic
+#SBATCH --partition=hard
+#SBATCH --exclude=led,lizzy,thin,zeppelin
 #SBATCH --job-name=pick_train_analysis
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1

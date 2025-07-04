@@ -6,8 +6,8 @@ TASK=1    #$1   #       #
 INTRINSIC_REWARD=True
 DUAL_VAL=True
 INTRINSIC_DECAY=True
-STARTEPOCHS=140
-LOADING_PATH="/home/bahaduri/VIPER/outputs/LLM_dual_dcy_3/epochs_138-139"
+STARTEPOCHS=0
+LOADING_PATH=""
 
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
@@ -28,7 +28,7 @@ python3 -m lamorel_launcher.launch \
     lamorel_args.llm_args.minibatch_size=128 \
     lamorel_args.accelerate_args.main_process_port="$PORT" \
     lamorel_args.allow_subgraph_use_whith_gradient=True \
-    rl_script_args.minibatch_size=64 \
+    rl_script_args.minibatch_size=164 \
     rl_script_args.seed="$SEED" \
     rl_script_args.epochs=150 \
     rl_script_args.number_envs=1 \

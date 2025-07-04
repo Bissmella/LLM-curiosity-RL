@@ -1,0 +1,113 @@
+[W 2025-07-04 09:05:30.009 ServerApp] jupyterlab | error adding extension (enabled: True): [Errno 2] No such file or directory
+    Traceback (most recent call last):
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 358, in add_extension
+        extpkg = ExtensionPackage(name=extension_name, enabled=enabled)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 212, in __init__
+        self._load_metadata()
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 221, in _load_metadata
+        self.module, self.metadata = get_metadata(name, logger=self.log)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/utils.py", line 76, in get_metadata
+        return module, module._jupyter_server_extension_points()
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/__init__.py", line 20, in _jupyter_server_extension_points
+        from .labapp import LabApp
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/labapp.py", line 46, in <module>
+        from .extensions import MANAGERS as EXT_MANAGERS
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/extensions/__init__.py", line 12, in <module>
+        from .pypi import PyPIExtensionManager
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/extensions/pypi.py", line 74, in <module>
+        "http://": httpx.AsyncHTTPTransport(proxy=http_proxy_url),
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/httpx/_transports/default.py", line 297, in __init__
+        ssl_context = create_ssl_context(verify=verify, cert=cert, trust_env=trust_env)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/httpx/_config.py", line 35, in create_ssl_context
+        ctx = ssl.create_default_context(cafile=os.environ["SSL_CERT_FILE"])
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/ssl.py", line 746, in create_default_context
+        context.load_verify_locations(cafile, capath, cadata)
+    FileNotFoundError: [Errno 2] No such file or directory
+[I 2025-07-04 09:05:30.031 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2025-07-04 09:05:30.040 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[I 2025-07-04 09:05:30.046 ServerApp] notebook | extension was successfully linked.
+[I 2025-07-04 09:05:30.049 ServerApp] Writing Jupyter server cookie secret to /home/bahaduri/.local/share/jupyter/runtime/jupyter_cookie_secret
+[W 2025-07-04 09:05:33.884 ServerApp] jupyterlab | error adding extension (enabled: True): [Errno 2] No such file or directory
+    Traceback (most recent call last):
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 358, in add_extension
+        extpkg = ExtensionPackage(name=extension_name, enabled=enabled)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 212, in __init__
+        self._load_metadata()
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/manager.py", line 221, in _load_metadata
+        self.module, self.metadata = get_metadata(name, logger=self.log)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyter_server/extension/utils.py", line 76, in get_metadata
+        return module, module._jupyter_server_extension_points()
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/__init__.py", line 20, in _jupyter_server_extension_points
+        from .labapp import LabApp
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/labapp.py", line 46, in <module>
+        from .extensions import MANAGERS as EXT_MANAGERS
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/extensions/__init__.py", line 12, in <module>
+        from .pypi import PyPIExtensionManager
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/jupyterlab/extensions/pypi.py", line 74, in <module>
+        "http://": httpx.AsyncHTTPTransport(proxy=http_proxy_url),
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/httpx/_transports/default.py", line 297, in __init__
+        ssl_context = create_ssl_context(verify=verify, cert=cert, trust_env=trust_env)
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/site-packages/httpx/_config.py", line 35, in create_ssl_context
+        ctx = ssl.create_default_context(cafile=os.environ["SSL_CERT_FILE"])
+      File "/home/bahaduri/.conda/envs/viper2/lib/python3.9/ssl.py", line 746, in create_default_context
+        context.load_verify_locations(cafile, capath, cadata)
+    FileNotFoundError: [Errno 2] No such file or directory
+[I 2025-07-04 09:05:33.885 ServerApp] notebook_shim | extension was successfully linked.
+[I 2025-07-04 09:05:33.967 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2025-07-04 09:05:33.971 ServerApp] jupyter_lsp | extension was successfully loaded.
+[I 2025-07-04 09:05:33.972 ServerApp] jupyter_server_terminals | extension was successfully loaded.
+[I 2025-07-04 09:05:33.984 ServerApp] notebook | extension was successfully loaded.
+[I 2025-07-04 09:05:33.985 ServerApp] Serving notebooks from local directory: /home/bahaduri/VIPER
+[I 2025-07-04 09:05:33.985 ServerApp] Jupyter Server 2.16.0 is running at:
+[I 2025-07-04 09:05:33.985 ServerApp] http://edwards:12356/tree?token=0c6bea01b7b331eea54e948d3c684959526280c03fc0a39e
+[I 2025-07-04 09:05:33.985 ServerApp]     http://127.0.0.1:12356/tree?token=0c6bea01b7b331eea54e948d3c684959526280c03fc0a39e
+[I 2025-07-04 09:05:33.985 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 2025-07-04 09:05:33.993 ServerApp] 
+    
+    To access the server, open this file in a browser:
+        file:///home/bahaduri/.local/share/jupyter/runtime/jpserver-931634-open.html
+    Or copy and paste one of these URLs:
+        http://edwards:12356/tree?token=0c6bea01b7b331eea54e948d3c684959526280c03fc0a39e
+        http://127.0.0.1:12356/tree?token=0c6bea01b7b331eea54e948d3c684959526280c03fc0a39e
+[I 2025-07-04 09:05:36.561 ServerApp] Skipped non-installed server(s): bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
+[I 2025-07-04 09:09:24.787 ServerApp] 302 GET / (@192.168.0.100) 2.11ms
+[W 2025-07-04 09:09:24.845 ServerApp] Clearing invalid/expired login cookie username-localhost-8000
+[I 2025-07-04 09:09:24.846 JupyterNotebookApp] 302 GET /tree? (@192.168.0.100) 3.77ms
+[I 2025-07-04 09:09:40.326 ServerApp] User 9041155e72424376b40de8879e3b2b67 logged in.
+[I 2025-07-04 09:09:40.327 ServerApp] 302 POST /login?next=%2Ftree%3F (9041155e72424376b40de8879e3b2b67@192.168.0.100) 3.35ms
+[W 2025-07-04 09:09:52.655 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[W 2025-07-04 09:09:53.844 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:09:55.219 ServerApp] Kernel started: 9f4ddb81-1a18-45d0-900e-5abe195a0ce4
+[I 2025-07-04 09:09:57.854 ServerApp] Connecting to kernel 9f4ddb81-1a18-45d0-900e-5abe195a0ce4.
+[I 2025-07-04 09:09:57.859 ServerApp] Connecting to kernel 9f4ddb81-1a18-45d0-900e-5abe195a0ce4.
+[W 2025-07-04 09:09:57.862 ServerApp] The websocket_ping_timeout (90000) cannot be longer than the websocket_ping_interval (30000).
+    Setting websocket_ping_timeout=30000
+[I 2025-07-04 09:09:57.908 ServerApp] Connecting to kernel 9f4ddb81-1a18-45d0-900e-5abe195a0ce4.
+[I 2025-07-04 09:09:57.931 ServerApp] Connecting to kernel 9f4ddb81-1a18-45d0-900e-5abe195a0ce4.
+[I 2025-07-04 09:10:38.644 ServerApp] Kernel started: 81c33a99-cd45-471e-aff0-96f617cb23cf
+[I 2025-07-04 09:10:38.649 ServerApp] Kernel shutdown: 9f4ddb81-1a18-45d0-900e-5abe195a0ce4
+[I 2025-07-04 09:10:39.418 ServerApp] Connecting to kernel 81c33a99-cd45-471e-aff0-96f617cb23cf.
+[I 2025-07-04 09:10:54.617 ServerApp] Kernel started: 0264b3f1-39bb-45bd-9762-0b22b21feff4
+[I 2025-07-04 09:10:54.621 ServerApp] Kernel shutdown: 81c33a99-cd45-471e-aff0-96f617cb23cf
+[I 2025-07-04 09:10:55.391 ServerApp] Connecting to kernel 0264b3f1-39bb-45bd-9762-0b22b21feff4.
+[I 2025-07-04 09:11:24.180 ServerApp] Starting buffering for 0264b3f1-39bb-45bd-9762-0b22b21feff4:7358d25a-5e59-46ec-a667-522de44d0d93
+[I 2025-07-04 09:11:24.212 ServerApp] Connecting to kernel 0264b3f1-39bb-45bd-9762-0b22b21feff4.
+[I 2025-07-04 09:11:24.213 ServerApp] Restoring connection for 0264b3f1-39bb-45bd-9762-0b22b21feff4:7358d25a-5e59-46ec-a667-522de44d0d93
+[I 2025-07-04 09:11:55.466 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:11:55.468 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:13:56.345 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:13:56.346 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:15:57.157 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:15:57.159 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:17:58.025 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:17:58.026 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:19:58.867 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:19:58.868 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:22:00.661 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:22:00.663 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[I 2025-07-04 09:25:05.485 ServerApp] 302 GET / (@192.168.0.100) 1.18ms
+[I 2025-07-04 09:42:36.609 ServerApp] Saving file at /Results_analysis(1).ipynb
+[W 2025-07-04 09:42:36.610 ServerApp] Notebook Results_analysis(1).ipynb is not trusted
+[W 2025-07-04 10:47:24.216 ServerApp] WebSocket ping timeout after 119976 ms.
+[I 2025-07-04 10:47:29.221 ServerApp] Starting buffering for 0264b3f1-39bb-45bd-9762-0b22b21feff4:7358d25a-5e59-46ec-a667-522de44d0d93
+slurmstepd-edwards: error: *** JOB 315176 ON edwards CANCELLED AT 2025-07-04T11:05:44 DUE TO TIME LIMIT ***

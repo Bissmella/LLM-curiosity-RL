@@ -457,7 +457,7 @@ class Temp_predictor():
         target_seq = []
         counter =0
         for i, len in enumerate(buffer_trajLen):
-            acts = buffer_actions[counter: len]
+            acts = buffer_actions[counter: counter + len]
             counter += len
             if terminals[i]:
                 self.input_seq_buffer.append(buffer_goals[i])
