@@ -1,10 +1,10 @@
-SEED=$1
-WANDBRUN=$2           #"LLM_dual_2"
-OUTPUT_DIR=$3   #"/home/bahaduri/VIPER/outputs/LLM_dual_2"  #$2
-PORT=$4
+SEED=$1            #1             #
+WANDBRUN=$2                  #"LLM_dual_2"          #
+OUTPUT_DIR=$3                          #"/home/bahaduri/VIPER/outputs/tmps"  
+PORT=$4                            #12356                 #
 TASK=1    #$1   #       #
 INTRINSIC_REWARD=True
-DUAL_VAL=True
+DUAL_VAL=False
 INTRINSIC_DECAY=False
 STARTEPOCHS=0
 LOADING_PATH=""    #"/home/bahaduri/VIPER/outputs/LLM_dual_3/epochs_65-66"
@@ -20,7 +20,7 @@ fi
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_dual_PPO.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_cur_PPO.py" \
     lamorel_args.allow_subgraph_use_whith_gradient=True \
     lamorel_args.accelerate_args.machine_rank=0 \
     lamorel_args.llm_args.model_path="meta-llama/Llama-3.2-1B-Instruct" \

@@ -12,8 +12,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 #TODO   SENSITIVE HERE!!!!!!11
-from huggingface_hub import login
-login("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")
+# from huggingface_hub import login
+# login("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")
+import os
+os.environ["HUGGINGFACE_HUB_TOKEN"] ="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"
 
 
 from collections import OrderedDict
@@ -286,6 +288,7 @@ def main(config_args):
     np.random.seed(seed)
     set_seed(seed)
     
+    print(f"Hydra Output directory  : {hydra.core.hydra_config.HydraConfig.get().runtime.output_dir}")
     # init env
     
     
@@ -329,7 +332,11 @@ def main(config_args):
 
     caller_devices = lm_server.accelerator.device
     print("here!")
-    temporal_predictor = Temp_predictor(accelerator=accelerator, device=torch.device("cuda:1"))
+    #temporal predictor for action sequence novelty
+    if config_args.rl_script_args.temp_pred:
+        temporal_predictor = Temp_predictor(device=torch.device("cuda:0"))
+    else:
+        temporal_predictor = None
     if config_args.rl_script_args.name_environment!='AlfredTWEnv':
         display = Display(visible=0, size=(1024, 768))
         display.start()
@@ -337,19 +344,33 @@ def main(config_args):
     config["env"]["task_types"]=config_args.rl_script_args.task
     env = getattr(environment, config_args.rl_script_args.name_environment)(config)
     train_env = env.init_env(batch_size=config_args.rl_script_args.number_envs)
+    train_env.seed(seed)
     # init wandb
     wandb.init(project=config_args.wandb_args.project, mode=config_args.wandb_args.mode,name=config_args.wandb_args.run)
     # Set up experience buffer
-    buffers = [
-        PPOBuffer(
-            config_args.rl_script_args.steps_per_epoch
-            // config_args.rl_script_args.number_envs,
-            config_args.rl_script_args.gamma,
-            config_args.rl_script_args.lam,
-            config_args.rl_script_args.intrinsic_reward,
-        )
-        for _ in range(config_args.rl_script_args.number_envs)
-    ]
+    if config_args.rl_script_args.intrinsic_reward:
+        buffers = [
+            PPOBufferAugmented(
+                config_args.rl_script_args.steps_per_epoch
+                // config_args.rl_script_args.number_envs,
+                config_args.rl_script_args.gamma,
+                config_args.rl_script_args.lam,
+                config_args.rl_script_args.intrinsic_reward,
+                dualValue=config_args.rl_script_args.dual_val,
+                intrinsic_decay=config_args.rl_script_args.intrinsic_decay,
+            )
+            for _ in range(config_args.rl_script_args.number_envs)
+        ]
+    else:
+        buffers = [
+            PPOBufferAugmented(
+                config_args.rl_script_args.steps_per_epoch
+                // config_args.rl_script_args.number_envs,
+                config_args.rl_script_args.gamma,
+                config_args.rl_script_args.lam,
+            )
+            for _ in range(config_args.rl_script_args.number_envs)
+        ]
 
     # Prepare for interaction with environment
     (o, infos), ep_ret, ep_len = (
@@ -495,7 +516,8 @@ def main(config_args):
                 timeout = ep_len[i] == config_args.rl_script_args.max_ep_len
                 terminal = d[i] or timeout
                 if terminal or epoch_ended:
-                    buffers[i].store_goal(infos[i]['goal'], ep_len[i])
+                    buffers[i].store_goal(infos[i]["goal"], ep_len[i], terminal)
+                    # buffers[i].store_goal(infos[i]['goal'], ep_len[i])
                     if not terminal:
                         bootstrap_dict["ids"].append(i)
                         bootstrap_dict["contexts"].append(
@@ -509,7 +531,7 @@ def main(config_args):
                             history["ep_ret"].append(ep_ret[i])
                             history["goal"].append(infos[i]["goal"])
                             not_saved[i] = False
-                        buffers[i].finish_path(0)
+                        buffers[i].finish_path(0, win = s[i]==1, epoch= epoch, cur_model=temporal_predictor)
 
                         # history["ep_len"].append(ep_len[i])
                         # history["ep_ret"].append(ep_ret[i])
@@ -519,7 +541,7 @@ def main(config_args):
             
             for env_id in range(len(d)):
               if d[env_id]:
-                o, infos = train_env.reset(env_id=env_id)
+                o, infos = train_env.reset()##env_id=env_id)  #env_id not working in textworld
                 not_saved = [
                     True for _ in range(config_args.rl_script_args.number_envs)
                 ]
@@ -561,7 +583,7 @@ def main(config_args):
                 )
                 for _i in range(len(output)):
                     buffers[bootstrap_dict["ids"][_i]].finish_path(
-                        output[_i]["value"][0]
+                        output[_i]["value"][0], win = s[0]==1, epoch= epoch, cur_model=temporal_predictor
                     )
 
         # Perform PPO update!
@@ -614,8 +636,12 @@ def main(config_args):
 
         #TODO  write the model info to a file
         #update
-        if epoch > 0:
-            temp_info = temporal_predictor.update_model(buffers[i].goal_buf, buffers[i].traj_lens, buffers[i].act_buf)
+        if temporal_predictor is not None:# and epoch > 0: #TODO  buffers and number of environments should be only 1
+            temp_info = temporal_predictor.update_model(buffers[0].goal_buf, buffers[0].traj_lens, buffers[0].cmd_buf, buffers[0].terminals)
+            wandb.log(temp_info)
+            buffers[i].reset_goal()
+        else:
+            temp_info = None
 
         avg_loss = np.mean([_r["loss"] for _r in update_results])
         avg_policy_loss = np.mean([_r["policy_loss"] for _r in update_results])
@@ -635,6 +661,12 @@ def main(config_args):
         )
         history["prompts"].extend(collected_trajectories["obs"])
         print(f"Update loss: {avg_loss}")
+        success_rate = [1 if _ret > 1 else 0 for _ret in history["ep_ret"]]
+        avg_success_rate = np.mean(success_rate)
+        info = {"loss": avg_loss, "policy_loss": avg_policy_loss, "value_loss": avg_value_loss, "SR": avg_success_rate}
+        if temp_info is not None:
+            info.update(temp_info)
+        wandb.log(info)
 
         if save_model_and_history:
             # Save history

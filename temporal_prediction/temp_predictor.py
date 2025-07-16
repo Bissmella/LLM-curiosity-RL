@@ -496,7 +496,7 @@ class Temp_predictor():
         model_inputs = self.assign_token_weights2(target_seq, model_inputs, token_offsets)
         dataset = TrajectoryDataset(model_inputs)
         data_collator = CustomCollator(tokenizer=self.tokenizer, model=self.model)
-        train_loader = DataLoader(dataset, batch_size=64, collate_fn=data_collator, shuffle=True)
+        train_loader = DataLoader(dataset, batch_size=32, collate_fn=data_collator, shuffle=True)
         #TODO set the max new tokens of the model to max_tokens of the policy LLM * max_steps of the policy
         #train_loader = self.accelerator.prepare(train_loader)
         info = {}

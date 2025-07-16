@@ -4,7 +4,7 @@
 #SBATCH --job-name=pick_train_analysis
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
-#SBATCH --time=42:00:00
+#SBATCH --time=48:00:00
 #SBATCH --output=%x-%j.out
 #SBATCH --error=%x-%j.err
 nvidia-smi -L
@@ -14,8 +14,8 @@ cd /home/bahaduri/VIPER
 
 #"aerosmith,top,zz"
 conda activate viper2
-SEED=2
-WANDBRUN="LLM_cur_2"
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_cur_2"  #$2
-PORT=12359
-bash auto_run_dual.sh "$SEED" "$WANDBRUN" "$OUTPUT_DIR" "$PORT"
+SEED=3
+WANDBRUN="LLM_tmpd_curd_3"
+OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_tmpd_curd_3"  #$2
+PORT=12352
+bash auto_run_dual_dcy_tmp.sh "$SEED" "$WANDBRUN" "$OUTPUT_DIR" "$PORT"

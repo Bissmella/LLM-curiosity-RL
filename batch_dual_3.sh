@@ -15,7 +15,7 @@ cd /home/bahaduri/VIPER
 #"aerosmith,top,zz"
 conda activate viper2
 SEED=3
-WANDBRUN="LLM_dual_3"
-OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_dual_3"  #$2
+WANDBRUN="LLM_cur_3"
+OUTPUT_DIR="/home/bahaduri/VIPER/outputs/LLM_cur_3"  #$2
 PORT=12360
 bash auto_run_dual.sh "$SEED" "$WANDBRUN" "$OUTPUT_DIR" "$PORT"

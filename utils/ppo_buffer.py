@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from . import discount_cumsum, combined_shape
+import torch.nn.functional as F
 
 class PPOBuffer:
     """
@@ -27,6 +28,7 @@ class PPOBuffer:
         self.logp_buf = np.zeros(size, dtype=np.float32)
         self.gamma, self.lam = gamma, lam
         self.ptr, self.path_start_idx, self.max_size = 0, 0, size
+        
 
     def store(self, obs, possible_act, cmd, act, rew, val, logp):
         """
@@ -135,6 +137,7 @@ class PPOBufferAugmented:
         self.logp_buf = np.zeros(size, dtype=np.float32)
         self.gamma, self.lam = gamma, lam
         self.ptr, self.path_start_idx, self.max_size = 0, 0, size
+        self.freq_reward = True  #TODO hardcoded
 
     def store(self, obs, possible_act, cmd, act, rew, val, logp, val_cur=None):
         """
@@ -183,47 +186,66 @@ class PPOBufferAugmented:
         path_slice = slice(self.path_start_idx, self.ptr)
         rews = np.append(self.rew_buf[path_slice], last_val)
         vals = np.append(self.val_buf[path_slice], last_val)
-        if cur_model is None:
+        if cur_model is None or not self.freq_reward:
             scale = 0.0096
         else:
             scale = 0.006
         if not win:
-            cur_vals = np.append(self.valCur_buf[path_slice], last_curVal)
+            if self.dualValue:
+                cur_vals = np.append(self.valCur_buf[path_slice], last_curVal)
             if self.intrinsic_reward:
-                intrinsic_rews = np.array([
-                                            self.compute_intrinsic_reward(self.cmd_buf[i], scale=scale) #TODO hardcoded coefficient
-                                            for i in range(self.path_start_idx, self.ptr)
-                                        ])
-                intrinsic_rews = np.append(intrinsic_rews, 0)
+                progress = torch.tensor(epoch / 150.0)
+                sharpness = torch.tensor(5.0)
+                lambda_int = scale * torch.sigmoid((progress - 0.5) * sharpness).item()
+                if self.freq_reward:
+                    freq_rews = np.array([
+                                                self.compute_intrinsic_reward(self.cmd_buf[i], scale=lambda_int) #TODO hardcoded coefficient
+                                                for i in range(self.path_start_idx, self.ptr)
+                                            ])
+                    freq_rews = np.append(freq_rews, 0)
                 # curiosity reward based on temporal predictability
                 if cur_model is not None:
                     goal = self.goal_buf[-1]   #goal string
                     actions = self.cmd_buf[path_slice]   #list of actions
-                    cur_reward = cur_model.compute_novelty(goal, actions) * 0.006#TODO hardcoded coefficient
-                    try:
-                        intrinsic_rews[:-1] += cur_reward   #cur_reward is one element less
-                    except:
-                        print("Error occurred! Goal:", goal)
-                        print("Actions:", actions)
+                    cur_reward = cur_model.compute_novelty(goal, actions) * lambda_int#TODO hardcoded coefficient
+                    tgt_shape = rews.shape[0] - 1
+                    cur_reward = np.pad(cur_reward, (0, tgt_shape - cur_reward.shape[0])) if cur_reward.shape[0] < tgt_shape else cur_reward
+                    if self.freq_reward:
+                        intrinsic_rews = freq_rews + np.append(cur_reward, 0)
+                    else:
+                        cur_reward = np.append(cur_reward, 0)
+                        intrinsic_rews = cur_reward
+                    # try:
+                    #     intrinsic_rews[:-1] += cur_reward   #cur_reward is one element less
+                    # except:
+                    #     print("Error occurred! Goal:", goal)
+                    #     print("Actions:", actions)
                 
                 #intrinsic_rews = intrinsic_rews * (40 / (40 + epoch))
                 # the next two lines implement GAE-Lambda advantage calculation
-                intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]
-                if self.intrinsic_decay:
-                    if epoch < 40:
-                        decay_factor = 1
-                    else:
-                        decay_factor = self.intrinsic_decay_scale/ (self.intrinsic_decay_scale + epoch)
-                    intrinsic_deltas = intrinsic_deltas * decay_factor
-                self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
+                if self.dualValue:
+                    intrinsic_deltas = intrinsic_rews[:-1] + self.gamma * cur_vals[1:] - cur_vals[:-1]
+                    if self.intrinsic_decay:
+                        if epoch < 40:
+                            decay_factor = 1
+                        else:
+                            decay_factor = self.intrinsic_decay_scale/ (self.intrinsic_decay_scale + epoch)
+                        intrinsic_deltas = intrinsic_deltas * decay_factor
+                    self.retCur_buf[path_slice] = discount_cumsum(intrinsic_rews, self.gamma)[:-1]
 
                 
                 #actions
                 #rews = rews + intrinsic_rews
         deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
         self.adv_buf[path_slice] = discount_cumsum(deltas, self.gamma * self.lam)
-        if not win and self.intrinsic_reward and self.dualValue:
-            self.adv_buf[path_slice] += discount_cumsum(intrinsic_deltas, self.gamma * self.lam)
+        if not win and self.intrinsic_reward:
+            if self.dualValue:
+                self.adv_buf[path_slice] += discount_cumsum(intrinsic_deltas, self.gamma * self.lam)
+            else:
+                try:
+                    self.adv_buf[path_slice] += intrinsic_rews[:-1] ##discount_cumsum(intrinsic_rews, self.gamma)[:-1]#
+                except:
+                    print( "error encountered: ")
 
         # the next line computes rewards-to-go, to be targets for the value function
         self.ret_buf[path_slice] = discount_cumsum(rews, self.gamma)[:-1]
@@ -241,8 +263,12 @@ class PPOBufferAugmented:
         # the next two lines implement the advantage normalization trick
         adv_mean, adv_std = np.mean(self.adv_buf), np.std(self.adv_buf)
         self.adv_buf = (self.adv_buf - adv_mean) / adv_std
-        data = dict(obs=self.obs_buf, possible_act=self.possible_act_buf, act=self.act_buf, ret=self.ret_buf, retCur_buf=self.retCur_buf,
+        if self.dualValue:
+            data = dict(obs=self.obs_buf, possible_act=self.possible_act_buf, act=self.act_buf, ret=self.ret_buf, retCur_buf=self.retCur_buf,
                     adv=self.adv_buf, logp=self.logp_buf, val=self.val_buf, valCur_buf=self.valCur_buf)
+        else:
+            data = dict(obs=self.obs_buf, possible_act=self.possible_act_buf, act=self.act_buf, ret=self.ret_buf,
+                    adv=self.adv_buf, logp=self.logp_buf, val=self.val_buf)
         return {
             k: torch.as_tensor(v, dtype=torch.float32)
             if not isinstance(v, list) else v

@@ -4,7 +4,7 @@ OUTPUT_DIR=$3   #"/home/bahaduri/VIPER/outputs/LLM_dual_2"  #$2
 PORT=$4
 TASK=1    #$1   #       #
 INTRINSIC_REWARD=True
-DUAL_VAL=True
+DUAL_VAL=False
 INTRINSIC_DECAY=False
 TEMP_PRED=True
 STARTEPOCHS=0   #78
@@ -21,7 +21,7 @@ fi
 python3 -m lamorel_launcher.launch \
     --config-path "/home/bahaduri/VIPER/experiments/configs/" \
     --config-name "local_gpu_config" \
-    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_dual_PPO.py" \
+    rl_script_args.path="/home/bahaduri/VIPER/experiments/Train_cur_PPO.py" \
     rl_script_args.output_dir=.  \
     lamorel_args.allow_subgraph_use_whith_gradient=True \
     lamorel_args.accelerate_args.machine_rank=0 \

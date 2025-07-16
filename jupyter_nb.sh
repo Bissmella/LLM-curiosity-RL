@@ -23,3 +23,5 @@ conda activate viper2
 which jupyter-notebook 
 ##conda env list
 jupyter notebook --no-browser --ip=0.0.0.0 --port=12356
+
+##ssh -N -L 8000:bernard:9007 bahaduri@gpu.scai.sorbonne-universite.fr
