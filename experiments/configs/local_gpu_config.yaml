@@ -64,8 +64,8 @@ rl_script_args:
   steps_per_epoch: 400
   save_freq: 1
   output_dir: null
-  loading_path:  #"/home/bahaduri/VIPER/weights/Mistral/pick"
-  vlm_loading_path: #/lustre/fswork/projects/rech/lrp/ufn64rt/project/vlm
+  loading_path:  
+  vlm_loading_path: 
   transitions_buffer_len: 2
   # environment
   name_environment: 'AlfredTWEnv' # 'AlfredTWEnv', 'AlfredThorEnv'

@@ -8,3 +8,8 @@ weights/
 /pick_train_analysis*
 /pick_ppo*
 wandb/
+auto_batch.sh
+auto_run_batch.sh
+auto_batch_eval_ppoEpoch.sh
+auto_batch_eval_ppoMulti.sh
+VIPER/Results_analysis_.ipynb

@@ -1,14 +1,14 @@
 SEED=$1
-WANDBRUN=$2           #"LLM_dual_2"
-OUTPUT_DIR=$3   #"/home/bahaduri/VIPER/outputs/LLM_dual_2"  #$2
+WANDBRUN=$2
+OUTPUT_DIR=$3
 PORT=$4
-TASK=1    #$1   #       #
+TASK=1
 INTRINSIC_REWARD=True
 DUAL_VAL=False
 INTRINSIC_DECAY=False
 TEMP_PRED=True
-STARTEPOCHS=0   #78
-LOADING_PATH=""   #"/home/bahaduri/VIPER/outputs/LLM_dual_dcy_tmp_3/epochs_76-77"
+STARTEPOCHS=0
+LOADING_PATH=""   
 
 #create output_dir if not existing
 if [ ! -d "$OUTPUT_DIR" ]; then
