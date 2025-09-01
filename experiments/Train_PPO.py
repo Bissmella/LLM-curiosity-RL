@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 #TODO   SENSITIVE HERE!!!!!!11
 from huggingface_hub import login
-login("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")
+login("YOUR_HF_TOKEN")
 
 
 from collections import OrderedDict
